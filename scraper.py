@@ -113,16 +113,8 @@ def fbref_search(name):
 
     # Si on a fini la boucle sans trouver de correspondance exacte pour 'name', on lève une erreur
     # (on considère que la requête ne vise pas un joueur)
-    raise ValueError(f"Aucun joueur trouvé correspondant précisément à '{name}'.)
-
-
-
-
-
-
-
-
-
+    raise ValueError(f"Aucun joueur trouvé correspondant précisément à '{name}'.")
+                     
 def extract_player_info(html, base_url, name):
     """
     Extrait les informations de base du joueur depuis sa page FBref.
