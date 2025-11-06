@@ -4,7 +4,7 @@ import re
 import json
 import pandas as pd
 from bs4 import BeautifulSoup
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, urljoin
 import cloudscraper
 
 
@@ -83,8 +83,7 @@ def fetch_page(url, max_retries=3, timeout=15, use_cloudscraper_on_block=True):
 
 def fbref_search(name):
     """
-    Utilise la page de recherche FBref et renvoie les listes de résultats.
-    Retour : dict { 'players': [(text, url), ...], 'teams': [...], 'comps': [...] }
+    Recherche un joueur sur FBref par nom.
     """
     q = quote_plus(name)
     url = f"{BASE}/search/search.fcgi?search={q}"
@@ -97,20 +96,39 @@ def fbref_search(name):
     time.sleep(RATE_SEC)
     soup = BeautifulSoup(html, "lxml")
 
-    results = {"players": [], "teams": [], "comps": []}
-    # FBref montre plusieurs blocs, on cherche les liens pertinents
-    # on parcourt tous les <a> de la page de recherche et on catégorise selon l'URL
+    results = {"players": []}
+    # FBref montre plusieurs blocs, on cherche uniquement les liens de joueurs
+    # On parcourt tous les <a> de la page de recherche et on filtre strictement
+    seen = set()
     for a in soup.find_all("a", href=True):
         href = a["href"]
         text = a.get_text(strip=True)
-        if not href or not text:
+        if not href:
             continue
-        if "/en/players/" in href:
-            results["players"].append((text, BASE + href))
-        elif "/en/squads/" in href or "/en/teams/" in href:
-            results["teams"].append((text, BASE + href))
-        elif "/en/comps/" in href:
-            results["comps"].append((text, BASE + href))
+        # n'accepter que les URLs qui correspondent au pattern joueur
+        # ex: /en/players/<id>/<player-slug>
+        # on rejette la page index /en/players/ qui existe sur FBref
+        if not re.match(r"^/en/players/[^/]+/.+", href):
+            break
+        full = urljoin(BASE, href)
+        if full in seen:
+            continue
+        seen.add(full)
+        # si le texte du lien est générique (ex: 'Players'), inférer le nom depuis le slug
+        name_text = text
+        if not name_text or name_text.lower() in ("players", "player", "players »"):
+            try:
+                slug = href.rstrip("/").split("/")[-1]
+                name_text = slug.replace("-", " ")
+            except Exception:
+                name_text = text or ""
+
+        results["players"].append((name_text, full))
+
+    # Si aucun joueur trouvé, on considère que la requête ne vise pas un joueur
+    if not results["players"]:
+        raise ValueError(f"Aucun joueur trouvé pour '{name}'. Il semble s'agir d'une équipe ou d'une autre entité.")
+
     return results
 
 
