@@ -3,11 +3,11 @@ import time
 import re
 import json
 import pandas as pd
+import cloudscraper
+from PIL import Image, ImageDraw, ImageFont
 from bs4 import BeautifulSoup
 from urllib.parse import quote_plus, urljoin
-import cloudscraper
-
-
+from io import BytesIO
 
 DEFAULT_HEADERS = {
     "User-Agent": ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -27,6 +27,10 @@ REQUESTS_SESSION.headers.update(DEFAULT_HEADERS)
 
 CLOUDSCRAPER_SESSION = cloudscraper.create_scraper()
 CLOUDSCRAPER_SESSION.headers.update(DEFAULT_HEADERS)
+
+###############################################################################################################################################
+# FONCTIONS PRINCIPALES
+###############################################################################################################################################
 
 def fetch_page(url, max_retries=3, timeout=15, use_cloudscraper_on_block=True):
     """
@@ -83,7 +87,7 @@ def fetch_page(url, max_retries=3, timeout=15, use_cloudscraper_on_block=True):
 
 def fbref_search(name):
     """
-    Recherche un joueur sur FBref par nom.
+    Recherche un joueur sur FBref par son nom.
     """
     q = quote_plus(name)
     url = f"{BASE}/search/search.fcgi?search={q}"
@@ -109,7 +113,7 @@ def fbref_search(name):
         # ex: /en/players/<id>/<player-slug>
         # on rejette la page index /en/players/ qui existe sur FBref
         if not re.match(r"^/en/players/[^/]+/.+", href):
-            break
+            continue
         full = urljoin(BASE, href)
         if full in seen:
             continue
@@ -130,5 +134,133 @@ def fbref_search(name):
         raise ValueError(f"Aucun joueur trouvé pour '{name}'. Il semble s'agir d'une équipe ou d'une autre entité.")
 
     return results
+
+def extract_player_info(html, base_url, name):
+    """
+    Extrait les informations de base du joueur depuis sa page FBref.
+    Retourne un dict avec les champs principaux.
+    """
+    soup = BeautifulSoup(html, "lxml")
+    info = {}
+
+    # Nom principal 
+    info["name"] = name
+
+    # Position, pied, nationalité, club
+    p_tags = soup.select("#meta p")
+    for p in p_tags:
+        raw = p.get_text(" ", strip=True)
+        # normaliser les espaces
+        raw = re.sub(r"\s+", " ", raw)
+        # split sur plusieurs séparateurs courants
+        parts = re.split(r"\s*[▪•·|/]\s*", raw)
+        for part in parts:
+            part = part.strip()
+            if not part:
+                continue
+            # Full name 
+            m = re.search(name, part, flags=re.I)
+            if m:
+                info["full_name"] = part.strip()
+                continue
+            # Position
+            m = re.search(r"Position\s*: ?(.+)", part, flags=re.I)
+            if m:
+                info["position"] = m.group(1).strip()
+                continue
+            # Footed (pied)
+            m = re.search(r"Footed\s*: ?(.+)", part, flags=re.I)
+            if m:
+                info["footed"] = m.group(1).strip()
+                continue
+            # Born
+            m = re.search(r"Born\s*: ?(.+)", part, flags=re.I)
+            if m:
+                info["birth"] = m.group(1).strip()
+                continue
+            # National Team
+            m = re.search(r"National Team\s*: ?(.+)", part, flags=re.I)
+            if m:
+                info["national_team"] = m.group(1).strip()
+                continue
+            # Club
+            m = re.search(r"Club\s*: ?(.+)", part, flags=re.I)
+            if m:
+                info["club"] = m.group(1).strip()
+                continue
+            # Wages 
+            m = re.search(r"Wages\s*: ?(.+)", part, flags=re.I)
+            if m:
+                val = m.group(1).strip()
+                # garder uniquement la première phrase (jusqu'au premier point inclus)
+                dot = val.find('.')
+                if dot != -1:
+                    val = val[:dot+1].strip()
+                info["wages"] = val
+                continue
+
+    # --- Photo du joueur ---
+    img_tag = soup.select_one("#meta img")
+    if img_tag and img_tag.get("src"):
+        img_src = img_tag["src"]
+        if img_src.startswith("/"):
+            img_src = base_url + img_src
+        info["photo_url"] = img_src
+
+    return info
+
+def create_player_passport_image(info, output_file):
+    """
+    Crée une image "passeport" du joueur avec ses informations de base.
+    """
+    # Télécharger la photo
+    img_url = info.get("photo_url")
+    if img_url:
+        response = CLOUDSCRAPER_SESSION.get(img_url)
+        photo = Image.open(BytesIO(response.content)).convert("RGBA")
+        photo = photo.resize((200, 200))
+    else:
+        # placeholder gris
+        photo = Image.new("RGBA", (200, 200), (180, 180, 180, 255))
+
+    # Créer le fond (passeport)
+    width, height = 800, 250
+    background = Image.new("RGBA", (width, height), (245, 245, 245, 255))
+    draw = ImageDraw.Draw(background)
+
+    # Police (tu peux changer selon ton système)
+    try:
+        font_title = ImageFont.truetype("arialbd.ttf", 30)
+        font_text = ImageFont.truetype("arial.ttf", 20)
+    except:
+        font_title = font_text = ImageFont.load_default()
+
+    # Coller la photo
+    background.paste(photo, (20, 25))
+
+    # Texte du joueur
+    x0 = 250
+    y = 30
+    draw.text((x0, y), info.get("name", "N/A"), fill=(0, 0, 0), font=font_title)
+    y += 40
+    draw.text((x0, y), f"Nom complet : {info.get('full_name', 'N/A')}", fill=(30, 30, 30), font=font_text)
+    y += 30
+    draw.text((x0, y), f"Position : {info.get('position', 'N/A')}", fill=(30, 30, 30), font=font_text)
+    y += 30
+    draw.text((x0, y), f"Pied : {info.get('footed', 'N/A')}", fill=(30, 30, 30), font=font_text)
+    y += 30
+    draw.text((x0, y), f"Naissance : {info.get('birth', 'N/A')}", fill=(30, 30, 30), font=font_text)
+    y += 30
+    draw.text((x0, y), f"Nationalité : {info.get('national_team', 'N/A')}", fill=(30, 30, 30), font=font_text)
+    y += 30
+    draw.text((x0, y), f"Club : {info.get('club', 'N/A')}", fill=(30, 30, 30), font=font_text)
+    y += 30
+    draw.text((x0, y), f"Salaire : {info.get('wages', 'N/A')}", fill=(30, 30, 30), font=font_text)
+
+    # Sauvegarde
+    background.save(output_file)
+    print(f"✅ Passeport joueur enregistré sous {output_file}")
+
+
 
 
