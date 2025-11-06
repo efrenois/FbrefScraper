@@ -9,6 +9,7 @@ from PIL import Image, ImageDraw, ImageFont
 from bs4 import BeautifulSoup
 from urllib.parse import quote_plus, urljoin
 from io import BytesIO
+import unicodedata
 
 
 DEFAULT_HEADERS = {
@@ -73,42 +74,53 @@ def fbref_search(name):
         raise RuntimeError(f"Erreur HTTP {status} lors de la recherche ou page vide.")
     # Respect du délai global
     time.sleep(RATE_SEC)
+    
     soup = BeautifulSoup(html, "lxml")
 
     results = {"players": []}
     seen = set()
 
-    # On parcourt tous les <a> de la page de recherche et on filtre strictement
-    for a in soup.find_all("a", href=True):
+    # Parcours avec boucle while + booléen : on s'arrête dès qu'on trouve le joueur 'name'
+    anchors = soup.find_all("a", href=True)
+    i = 0
+    found = False
+
+    while i < len(anchors) and not found:
+        a = anchors[i]
         href = a["href"]
         text = a.get_text(strip=True)
+
+        # ignorer les liens sans href
         if not href:
+            i += 1
             continue
-        # n'accepter que les URLs qui correspondent au pattern joueur
-        # ex: /en/players/<id>/<player-slug>
-        # on rejette la page index /en/players/ qui existe sur FBref
-        if not re.match(r"^/en/players/[^/]+/.+", href):
-            continue
-        full = urljoin(BASE, href)
-        if full in seen:
-            continue
-        seen.add(full)
-        # si le texte du lien est générique (ex: 'Players'), inférer le nom depuis le slug
-        name_text = text
-        if not name_text or name_text.lower() in ("players", "player", "players »"):
-            try:
-                slug = href.rstrip("/").split("/")[-1]
-                name_text = slug.replace("-", " ")
-            except Exception:
-                name_text = text or ""
 
-        results["players"].append((name_text, full))
+        # filtrer les liens de joueurs
+        if re.match(r"^/en/players/[^/]+/.+", href):
+            full = urljoin(BASE, href)
+            name_text = unicodedata.normalize("NFKD", text)
 
-    # Si aucun joueur trouvé, on considère que la requête ne vise pas un joueur
-    if not results["players"]:
-        raise ValueError(f"Aucun joueur trouvé pour '{name}'. Il semble s'agir d'une équipe ou d'une autre entité.")
+            if full not in seen:
+                seen.add(full)
+                results["players"].append((name_text, full))
 
-    return results
+            # Si le nom correspond (contenu, insensible à la casse), on s'arrête et on retourne
+            if re.search(re.escape(name), name_text, flags=re.I):
+                found = True
+                return results
+
+        i += 1
+
+    # Si on a fini la boucle sans trouver de correspondance exacte pour 'name', on lève une erreur
+    # (on considère que la requête ne vise pas un joueur)
+    raise ValueError(f"Aucun joueur trouvé correspondant précisément à '{name}'.)
+
+
+
+
+
+
+
 
 
 def extract_player_info(html, base_url, name):
