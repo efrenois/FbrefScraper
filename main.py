@@ -10,7 +10,6 @@ def main():
     args = parser.parse_args()
 
     name = " ".join(args.query).strip()
-    print(name)
     print(f"Recherche pour : {name}")
 
     try:

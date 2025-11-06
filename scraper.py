@@ -4,10 +4,12 @@ import re
 import json
 import pandas as pd
 import cloudscraper
+import unicodedata
 from PIL import Image, ImageDraw, ImageFont
 from bs4 import BeautifulSoup
 from urllib.parse import quote_plus, urljoin
 from io import BytesIO
+
 
 DEFAULT_HEADERS = {
     "User-Agent": ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -22,9 +24,6 @@ BASE = "https://fbref.com"
 RATE_SEC = 1.5  # délai entre requêtes
 
 # session réutilisables 
-REQUESTS_SESSION = requests.Session()
-REQUESTS_SESSION.headers.update(DEFAULT_HEADERS)
-
 CLOUDSCRAPER_SESSION = cloudscraper.create_scraper()
 CLOUDSCRAPER_SESSION.headers.update(DEFAULT_HEADERS)
 
@@ -38,34 +37,8 @@ def fetch_page(url, max_retries=3, timeout=15, use_cloudscraper_on_block=True):
     Essaie first requests, puis cloudscraper en fallback si bloqué.
     """
     last_status = None
-
-    # 1) Tentative avec requests
-    for attempt in range(max_retries):
-        try:
-            r = REQUESTS_SESSION.get(url, timeout=timeout, allow_redirects=True)
-        except requests.RequestException as e:
-            last_status = f"requests exception: {e}"
-            time.sleep(2 ** attempt)
-            continue
-
-        last_status = r.status_code
-        if r.status_code == 200:
-            time.sleep(RATE_SEC)  # respecter délai global
-            return r.status_code, r.text 
-
-        # si bloqué / rate-limited -> backoff et retenter
-        if r.status_code in (403, 429):
-            time.sleep(2 ** attempt)
-            continue
-
-        # autres codes : on quitte en renvoyant le code + body (ou None)
-        try:
-            text = r.text if r.status_code < 500 else None
-        except Exception:
-            text = None
-        return r.status_code, text
     
-    # 2) Fallback cloudscraper si activé
+    # Fallback cloudscraper si activé
     if use_cloudscraper_on_block:
         for attempt in range(max_retries):
             try:
@@ -85,6 +58,7 @@ def fetch_page(url, max_retries=3, timeout=15, use_cloudscraper_on_block=True):
     # tout a échoué -> renvoyer code/erreur
     return (last_status or 0), None
 
+
 def fbref_search(name):
     """
     Recherche un joueur sur FBref par son nom.
@@ -93,6 +67,7 @@ def fbref_search(name):
     url = f"{BASE}/search/search.fcgi?search={q}"
     print(f"[search] requête : {url}")
     status, html = fetch_page(url, max_retries=3, timeout=15, use_cloudscraper_on_block=True)
+
     if status != 200 or not html:
         # message utile pour debug
         raise RuntimeError(f"Erreur HTTP {status} lors de la recherche ou page vide.")
@@ -101,9 +76,9 @@ def fbref_search(name):
     soup = BeautifulSoup(html, "lxml")
 
     results = {"players": []}
-    # FBref montre plusieurs blocs, on cherche uniquement les liens de joueurs
-    # On parcourt tous les <a> de la page de recherche et on filtre strictement
     seen = set()
+
+    # On parcourt tous les <a> de la page de recherche et on filtre strictement
     for a in soup.find_all("a", href=True):
         href = a["href"]
         text = a.get_text(strip=True)
@@ -134,6 +109,7 @@ def fbref_search(name):
         raise ValueError(f"Aucun joueur trouvé pour '{name}'. Il semble s'agir d'une équipe ou d'une autre entité.")
 
     return results
+
 
 def extract_player_info(html, base_url, name):
     """
