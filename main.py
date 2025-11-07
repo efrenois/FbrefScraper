@@ -1,15 +1,15 @@
 import sys
-from scraper import fbref_search, fetch_page,extract_player_info, create_player_passport_image
 import argparse 
-
+import os
+from scraper import fbref_search, fetch_page,extract_player_info
+from jinja2 import Template
 
 def main():
-    parser = argparse.ArgumentParser(description="Scraper FBref minimal")
-    parser.add_argument("query", type=str, nargs="+", help="Nom du joueur (ou club si vous gérez) — on suppose ici joueur")
-    parser.add_argument("--season", type=str, help="Saison à récupérer, ex: '2024-2025'")
+    parser = argparse.ArgumentParser(description="Scraper FBref ")
+    parser.add_argument("nom_joueur", type=str, nargs="+", help="Nom du joueur dont on veut les informations")
     args = parser.parse_args()
 
-    name = " ".join(args.query).strip()
+    name = " ".join(args.nom_joueur).strip()
     print(f"Recherche pour : {name}")
 
     try:
@@ -40,16 +40,23 @@ def main():
         if not player_info:
             print("Impossible d'extraire les informations du joueur.")
             sys.exit(4)
+        
+        # Générer le passeport du joueur en HTML
+        template_path = os.path.join("templates", "passeport_template.html")
+        output_html = os.path.join("output", f"passeport_{name}.html")
+        
+        with open(template_path, "r", encoding="utf-8") as f:
+            template_str = f.read()
 
-        # Créer le fichier pour le fichier de sortie pour le passeport
-        # safe_name = player_info.get("name", name).replace(" ", "_")
-        # output_file = f"passeport_{safe_name}.png"
+        template = Template(template_str)
+        html_content = template.render(**player_info)
+        
+        os.makedirs("output", exist_ok=True)
+        with open(output_html, "w", encoding="utf-8") as f:
+            f.write(html_content)
 
-        # Générer l'image du passeport
-        # create_player_passport_image(player_info, output_file)
-
-        # print(f"\n✅ Passeport généré avec succès : {output_file}\n")
-
+        print(f"✅ HTML généré : {output_html}")
+        
     else:
         print("Aucun résultat trouvé sur FBref.")
         sys.exit(0)

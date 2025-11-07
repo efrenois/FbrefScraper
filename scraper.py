@@ -1,7 +1,5 @@
-import requests
 import time
 import re
-import json
 import pandas as pd
 import cloudscraper
 import unicodedata
@@ -10,6 +8,8 @@ from bs4 import BeautifulSoup
 from urllib.parse import quote_plus, urljoin
 from io import BytesIO
 import unicodedata
+import os
+
 
 
 DEFAULT_HEADERS = {
@@ -136,9 +136,15 @@ def extract_player_info(html, base_url, name):
     info = {}
 
     # Nom principal 
-    info["name"] = name
-    search_norm = normalize_text(name)
-
+    # Extraire le nom principal directement depuis la page FBref 
+    h1 = soup.select_one("#meta h1") or soup.find("h1", {"itemprop": "name"})
+    if h1:
+        info["name"] = h1.get_text(strip=True)
+    else:
+        # fallback : utiliser le nom passé en paramètre si la page ne contient pas le h1 attendu
+        info["name"] = name or ""
+    # normalisé pour les comparaisons plus bas
+    search_norm = normalize_text(info["name"])
 
     # Position, pied, nationalité, club
     p_tags = soup.select("#meta p")
@@ -204,59 +210,4 @@ def extract_player_info(html, base_url, name):
         info["photo_url"] = img_src
 
     return info
-
-def create_player_passport_image(info, output_file):
-    """
-    Crée une image "passeport" du joueur avec ses informations de base.
-    """
-    # Télécharger la photo
-    img_url = info.get("photo_url")
-    if img_url:
-        response = CLOUDSCRAPER_SESSION.get(img_url)
-        photo = Image.open(BytesIO(response.content)).convert("RGBA")
-        photo = photo.resize((200, 200))
-    else:
-        # placeholder gris
-        photo = Image.new("RGBA", (200, 200), (180, 180, 180, 255))
-
-    # Créer le fond (passeport)
-    width, height = 800, 250
-    background = Image.new("RGBA", (width, height), (245, 245, 245, 255))
-    draw = ImageDraw.Draw(background)
-
-    # Police (tu peux changer selon ton système)
-    try:
-        font_title = ImageFont.truetype("arialbd.ttf", 30)
-        font_text = ImageFont.truetype("arial.ttf", 20)
-    except:
-        font_title = font_text = ImageFont.load_default()
-
-    # Coller la photo
-    background.paste(photo, (20, 25))
-
-    # Texte du joueur
-    x0 = 250
-    y = 30
-    draw.text((x0, y), info.get("name", "N/A"), fill=(0, 0, 0), font=font_title)
-    y += 40
-    draw.text((x0, y), f"Nom complet : {info.get('full_name', 'N/A')}", fill=(30, 30, 30), font=font_text)
-    y += 30
-    draw.text((x0, y), f"Position : {info.get('position', 'N/A')}", fill=(30, 30, 30), font=font_text)
-    y += 30
-    draw.text((x0, y), f"Pied : {info.get('footed', 'N/A')}", fill=(30, 30, 30), font=font_text)
-    y += 30
-    draw.text((x0, y), f"Naissance : {info.get('birth', 'N/A')}", fill=(30, 30, 30), font=font_text)
-    y += 30
-    draw.text((x0, y), f"Nationalité : {info.get('national_team', 'N/A')}", fill=(30, 30, 30), font=font_text)
-    y += 30
-    draw.text((x0, y), f"Club : {info.get('club', 'N/A')}", fill=(30, 30, 30), font=font_text)
-    y += 30
-    draw.text((x0, y), f"Salaire : {info.get('wages', 'N/A')}", fill=(30, 30, 30), font=font_text)
-
-    # Sauvegarde
-    background.save(output_file)
-    print(f"✅ Passeport joueur enregistré sous {output_file}")
-
-
-
 
