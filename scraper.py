@@ -28,6 +28,15 @@ RATE_SEC = 1.5  # délai entre requêtes
 CLOUDSCRAPER_SESSION = cloudscraper.create_scraper()
 CLOUDSCRAPER_SESSION.headers.update(DEFAULT_HEADERS)
 
+
+def normalize_text(s):
+    """Supprime les accents et met en minuscules."""
+    if not s:
+        return ""
+    s = unicodedata.normalize("NFKD", s)
+    s = s.encode("ascii", "ignore").decode("utf-8")  # enlève les accents
+    return s.lower().strip()
+
 ###############################################################################################################################################
 # FONCTIONS PRINCIPALES
 ###############################################################################################################################################
@@ -80,6 +89,7 @@ def fbref_search(name):
     results = {"players": []}
     seen = set()
 
+    search_norm = normalize_text(name)
     # Parcours avec boucle while + booléen : on s'arrête dès qu'on trouve le joueur 'name'
     anchors = soup.find_all("a", href=True)
     i = 0
@@ -98,14 +108,15 @@ def fbref_search(name):
         # filtrer les liens de joueurs
         if re.match(r"^/en/players/[^/]+/.+", href):
             full = urljoin(BASE, href)
-            name_text = unicodedata.normalize("NFKD", text)
-
+            name_text = text.strip()
+            name_text_norm = normalize_text(name_text)
+            
             if full not in seen:
                 seen.add(full)
                 results["players"].append((name_text, full))
 
             # Si le nom correspond (contenu, insensible à la casse), on s'arrête et on retourne
-            if re.search(re.escape(name), name_text, flags=re.I):
+            if search_norm in name_text_norm:
                 found = True
                 return results
 
@@ -114,6 +125,7 @@ def fbref_search(name):
     # Si on a fini la boucle sans trouver de correspondance exacte pour 'name', on lève une erreur
     # (on considère que la requête ne vise pas un joueur)
     raise ValueError(f"Aucun joueur trouvé correspondant précisément à '{name}'.")
+
                      
 def extract_player_info(html, base_url, name):
     """
@@ -125,6 +137,8 @@ def extract_player_info(html, base_url, name):
 
     # Nom principal 
     info["name"] = name
+    search_norm = normalize_text(name)
+
 
     # Position, pied, nationalité, club
     p_tags = soup.select("#meta p")
@@ -138,11 +152,13 @@ def extract_player_info(html, base_url, name):
             part = part.strip()
             if not part:
                 continue
+            
+            part_norm = normalize_text(part)
             # Full name 
-            m = re.search(name, part, flags=re.I)
-            if m:
+            if search_norm in part_norm and "position" not in part_norm and "born" not in part_norm:
                 info["full_name"] = part.strip()
                 continue
+            
             # Position
             m = re.search(r"Position\s*: ?(.+)", part, flags=re.I)
             if m:
