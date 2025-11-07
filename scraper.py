@@ -1,14 +1,14 @@
 import time
 import re
-import pandas as pd
 import cloudscraper
 import unicodedata
-from PIL import Image, ImageDraw, ImageFont
 from bs4 import BeautifulSoup
 from urllib.parse import quote_plus, urljoin
-from io import BytesIO
+from jinja2 import Template
 import unicodedata
-import os
+import sys
+import os 
+from difflib import SequenceMatcher
 
 
 
@@ -142,9 +142,10 @@ def extract_player_info(html, base_url, name):
         info["name"] = h1.get_text(strip=True)
     else:
         # fallback : utiliser le nom passé en paramètre si la page ne contient pas le h1 attendu
-        info["name"] = name or ""
+        info["name"] = "Nom inconnu"
     # normalisé pour les comparaisons plus bas
     search_norm = normalize_text(info["name"])
+
 
     # Position, pied, nationalité, club
     p_tags = soup.select("#meta p")
@@ -160,36 +161,70 @@ def extract_player_info(html, base_url, name):
                 continue
             
             part_norm = normalize_text(part)
-            # Full name 
-            if search_norm in part_norm and "position" not in part_norm and "born" not in part_norm:
-                info["full_name"] = part.strip()
-                continue
             
+            # initialiser les valeurs par défaut une seule fois
+            if not info.get("_meta_inited"):
+                defaults = {
+                    "full_name": "inconnu",
+                    "position": "inconnu",
+                    "footed": "inconnu",
+                    "birth": "inconnu",
+                    "national_team": "inconnu",
+                    "club": "inconnu",
+                    "wages": "inconnu",
+                }
+                for k, v in defaults.items():
+                    info.setdefault(k, v)
+                info["_meta_inited"] = True
+
+            # heuristique pour le nom complet : contient le terme de recherche et n'est pas une ligne de type "Position/Born/Footed/..."
+            # Détecte full_name même si la forme diffère (ex: "Cristiano Ronaldo" vs "Cristiano Ronaldo dos Santos Aveiro")
+            if search_norm and not re.search(r"\b(position|born|footed|national team|club|wages)\b", part_norm):
+                # comparaison par tokens : tous les tokens du nom de recherche présents dans la chaîne candidate
+                search_tokens = set(search_norm.split())
+                part_tokens = set(part_norm.split())
+                token_match = bool(search_tokens) and search_tokens.issubset(part_tokens)
+
+                # similarité globale pour tolérer ajouts/ordre/ponctuation différents
+                ratio = SequenceMatcher(None, search_norm, part_norm).ratio()
+                similar = ratio >= 0.70
+
+                # accepter si l'un des critères est rempli
+                if token_match or similar or part_norm.startswith(search_norm):
+                    if info.get("full_name") in (None, "", "inconnu"):
+                        info["full_name"] = part.strip()
+                    continue
+
             # Position
             m = re.search(r"Position\s*: ?(.+)", part, flags=re.I)
             if m:
                 info["position"] = m.group(1).strip()
                 continue
+
             # Footed (pied)
             m = re.search(r"Footed\s*: ?(.+)", part, flags=re.I)
             if m:
                 info["footed"] = m.group(1).strip()
                 continue
+
             # Born
             m = re.search(r"Born\s*: ?(.+)", part, flags=re.I)
             if m:
                 info["birth"] = m.group(1).strip()
                 continue
+
             # National Team
             m = re.search(r"National Team\s*: ?(.+)", part, flags=re.I)
             if m:
                 info["national_team"] = m.group(1).strip()
                 continue
+
             # Club
             m = re.search(r"Club\s*: ?(.+)", part, flags=re.I)
             if m:
                 info["club"] = m.group(1).strip()
                 continue
+
             # Wages 
             m = re.search(r"Wages\s*: ?(.+)", part, flags=re.I)
             if m:
@@ -198,7 +233,7 @@ def extract_player_info(html, base_url, name):
                 dot = val.find('.')
                 if dot != -1:
                     val = val[:dot+1].strip()
-                info["wages"] = val
+                info["wages"] = val or "inconnu"
                 continue
 
     # --- Photo du joueur ---
@@ -208,6 +243,30 @@ def extract_player_info(html, base_url, name):
         if img_src.startswith("/"):
             img_src = base_url + img_src
         info["photo_url"] = img_src
+    
+    if not info: 
+        print("Impossible d'extraire les informations du joueur.")
+        sys.exit(4)
 
     return info
+
+def generate_player_passeport(player_info):
+    """Génère une image de passeport pour le joueur avec les informations extraites."""
+    # Générer le passeport du joueur en HTML
+    template_path = os.path.join("templates", "passeport_template.html")
+    output_html = os.path.join("output", f"passeport_{player_info.get("name").replace(" ", "")}.html")
+    css_path = os.path.abspath("templates/style.css")
+
+        
+    with open(template_path, "r", encoding="utf-8") as f:
+        template_str = f.read()
+
+    template = Template(template_str)
+    html_content = template.render(**player_info, css_path=css_path)
+        
+    os.makedirs("output", exist_ok=True)
+    with open(output_html, "w", encoding="utf-8") as f:
+        f.write(html_content)
+
+    print(f"✅ HTML généré : {output_html}")
 

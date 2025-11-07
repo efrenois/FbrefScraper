@@ -1,8 +1,7 @@
 import sys
 import argparse 
 import os
-from scraper import fbref_search, fetch_page,extract_player_info
-from jinja2 import Template
+from scraper import *
 
 def main():
     parser = argparse.ArgumentParser(description="Scraper FBref ")
@@ -36,26 +35,9 @@ def main():
 
         # Extraire les infos du joueur
         player_info = extract_player_info(html, chosen, name)
-        print("Infos du joueur extraites :", player_info)
-        if not player_info:
-            print("Impossible d'extraire les informations du joueur.")
-            sys.exit(4)
-        
+
         # Générer le passeport du joueur en HTML
-        template_path = os.path.join("templates", "passeport_template.html")
-        output_html = os.path.join("output", f"passeport_{name}.html")
-        
-        with open(template_path, "r", encoding="utf-8") as f:
-            template_str = f.read()
-
-        template = Template(template_str)
-        html_content = template.render(**player_info)
-        
-        os.makedirs("output", exist_ok=True)
-        with open(output_html, "w", encoding="utf-8") as f:
-            f.write(html_content)
-
-        print(f"✅ HTML généré : {output_html}")
+        generate_player_passeport(player_info)
         
     else:
         print("Aucun résultat trouvé sur FBref.")

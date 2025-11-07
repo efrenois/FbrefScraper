@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.card {
+    display: flex;
+    background-color: #d1d9de;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    width: 700px;
+    padding: 20px 30px;
+    align-items: center;
+}
+
+.photo-section {
+    flex: 0 0 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.player-photo {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #007bff30;
+}
+
+.info-section {
+    flex: 1;
+    margin-left: 30px;
+}
+
+.player-name {
+    font-size: 1.8em;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 12px;
+}
+
+.info-section p {
+    font-size: 1em;
+    margin: 6px 0;
+    color: #555;
+}
+
+.info-section strong {
+    color: #007bff;
+    font-weight: 600;
+}
