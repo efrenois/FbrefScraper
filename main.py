@@ -36,7 +36,7 @@ def main():
         player_info = extract_player_info(html, chosen, name)
 
         # Générer le passeport du joueur en HTML
-        generate_player_passeport(player_info)
+        output_html = generate_player_passeport(player_info)
         
     
     else:

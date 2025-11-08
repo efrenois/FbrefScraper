@@ -5,13 +5,17 @@ import unicodedata
 import unicodedata
 import sys
 import os 
+import asyncio
+import tempfile
+from pyppeteer import launch
 from difflib import SequenceMatcher
-from weasyprint import HTML
 from bs4 import BeautifulSoup
 from urllib.parse import quote_plus, urljoin
 from jinja2 import Template
 
-
+################################################################################################################################################
+# PARAMÈTRES GLOBAUX
+################################################################################################################################################
 
 DEFAULT_HEADERS = {
     "User-Agent": ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -29,6 +33,9 @@ RATE_SEC = 1.5  # délai entre requêtes
 CLOUDSCRAPER_SESSION = cloudscraper.create_scraper()
 CLOUDSCRAPER_SESSION.headers.update(DEFAULT_HEADERS)
 
+###############################################################################################################################################
+# FONCTIONS UTILITAIRES
+###############################################################################################################################################
 
 def normalize_text(s):
     """Supprime les accents et met en minuscules."""
@@ -276,6 +283,4 @@ def generate_player_passeport(player_info):
         f.write(html_content)
 
     print(f"✅ HTML généré : {output_html}")
-    
-
-
+    return html_content
