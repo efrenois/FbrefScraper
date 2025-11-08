@@ -183,7 +183,7 @@ def extract_player_info(html, base_url, name):
                 # comparaison par tokens : tous les tokens du nom de recherche présents dans la chaîne candidate
                 search_tokens = set(search_norm.split())
                 part_tokens = set(part_norm.split())
-                token_match = bool(search_tokens) and search_tokens.issubset(part_tokens)
+                token_match = any(tok in part_tokens for tok in search_tokens)
 
                 # similarité globale pour tolérer ajouts/ordre/ponctuation différents
                 ratio = SequenceMatcher(None, search_norm, part_norm).ratio()
