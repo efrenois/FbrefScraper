@@ -2,13 +2,14 @@ import time
 import re
 import cloudscraper
 import unicodedata
-from bs4 import BeautifulSoup
-from urllib.parse import quote_plus, urljoin
-from jinja2 import Template
 import unicodedata
 import sys
 import os 
 from difflib import SequenceMatcher
+from weasyprint import HTML
+from bs4 import BeautifulSoup
+from urllib.parse import quote_plus, urljoin
+from jinja2 import Template
 
 
 
@@ -90,42 +91,48 @@ def fbref_search(name):
     seen = set()
 
     search_norm = normalize_text(name)
+    
     # Parcours avec boucle while + booléen : on s'arrête dès qu'on trouve le joueur 'name'
     anchors = soup.find_all("a", href=True)
     i = 0
-    found = False
-
-    while i < len(anchors) and not found:
+    # on garde la meilleure correspondance
+    best_match = None
+    best_score = 0.0
+    while i < len(anchors):
         a = anchors[i]
         href = a["href"]
         text = a.get_text(strip=True)
+        i += 1
 
-        # ignorer les liens sans href
         if not href:
-            i += 1
             continue
 
-        # filtrer les liens de joueurs
+        # filtrer uniquement les liens joueurs FBref
         if re.match(r"^/en/players/[^/]+/.+", href):
             full = urljoin(BASE, href)
             name_text = text.strip()
             name_text_norm = normalize_text(name_text)
-            
-            if full not in seen:
-                seen.add(full)
-                results["players"].append((name_text, full))
 
-            # Si le nom correspond (contenu, insensible à la casse), on s'arrête et on retourne
-            if search_norm in name_text_norm:
-                found = True
-                return results
+            if full in seen:
+                continue
+            seen.add(full)
+            results["players"].append((name_text, full))
 
-        i += 1
+            # Calcul de similarité textuelle
+            ratio = SequenceMatcher(None, search_norm, name_text_norm).ratio()
+            if ratio > best_score:
+                best_score = ratio
+                best_match = (name_text, full)
 
-    # Si on a fini la boucle sans trouver de correspondance exacte pour 'name', on lève une erreur
-    # (on considère que la requête ne vise pas un joueur)
-    raise ValueError(f"Aucun joueur trouvé correspondant précisément à '{name}'.")
+    if not results["players"]:
+        raise ValueError(f"Aucun joueur trouvé correspondant précisément à '{name}'.")
 
+    # afficher la meilleure correspondance trouvée
+    if best_match:
+        return {"players": [best_match]}
+    else:
+        raise ValueError(f"Aucun joueur trouvé correspondant à '{name}'.")
+    
                      
 def extract_player_info(html, base_url, name):
     """
@@ -269,4 +276,6 @@ def generate_player_passeport(player_info):
         f.write(html_content)
 
     print(f"✅ HTML généré : {output_html}")
+    
+
 

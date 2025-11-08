@@ -1,6 +1,5 @@
 import sys
 import argparse 
-import os
 from scraper import *
 
 def main():
@@ -39,6 +38,7 @@ def main():
         # Générer le passeport du joueur en HTML
         generate_player_passeport(player_info)
         
+    
     else:
         print("Aucun résultat trouvé sur FBref.")
         sys.exit(0)
