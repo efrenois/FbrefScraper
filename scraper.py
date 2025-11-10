@@ -48,42 +48,52 @@ def normalize_text(s):
 
 def save_season_stats_to_csv(season_stats, player_name, season):
     """
-    Sauvegarde les statistiques d'une saison dans un fichier CSV.
+    Sauvegarde les statistiques d'une saison ou de toutes les saisons dans un fichier CSV.
     - season_stats : dict (les données retournées par extract_player_season_stats_all_comps)
     - player_name : nom du joueur (string)
-    - season : saison (ex: "2023-2024")
+    - season : saison (ex: "2023-2024") ou "All" pour toutes les saisons
     """
     if not season_stats or "message" in season_stats:
         print("⚠️ Aucune donnée à enregistrer.")
         return None
 
-    # Récupérer les données de la saison
-    data = season_stats.get(season)
-    if not data:
-        print(f"⚠️ Données inconnues pour la saison {season}.")
-        return None
+    # Déterminer si on veut toutes les saisons
+    if str(season).lower() == "all" or season is None:
+        data_to_save = season_stats  # toutes les saisons
+        safe_season_name = "All"
+    else:
+        data_to_save = {season: season_stats.get(season)}
+        safe_season_name = season
 
     # Créer le dossier de sortie
-    output_dir = "output"
+    output_dir = "output/datas_player"
     os.makedirs(output_dir, exist_ok=True)
 
-    # Nettoyer le nom du joueur et de la saison pour le nom du fichier
+    # Nettoyer le nom du joueur pour le nom du fichier
     safe_player = player_name.replace(" ", "_").replace("/", "-")
-    safe_season = season.replace("/", "-").replace(" ", "")
+    safe_season_name = safe_season_name.replace("/", "-").replace(" ", "")
 
-    csv_filename = os.path.join(output_dir, f"stats_{safe_player}_{safe_season}.csv")
+    csv_filename = os.path.join(output_dir, f"stats_{safe_player}_{safe_season_name}.csv")
 
     # Préparer les données à écrire
-    fieldnames = ["Category", "Stat", "Value"]
+    fieldnames = ["Season", "Category", "Stat", "Value"]
     rows = []
 
-    for category, subdict in data.items():
-        for subheader, value in subdict.items():
-            rows.append({
-                "Category": category or "General",
-                "Stat": subheader,
-                "Value": value
-            })
+    for season_key, categories in data_to_save.items():
+        if not categories:  # aucune donnée pour cette saison
+            continue
+        for category, subdict in categories.items():
+            for subheader, value in subdict.items():
+                rows.append({
+                    "Season": season_key,
+                    "Category": category or "General",
+                    "Stat": subheader,
+                    "Value": value
+                })
+
+    if not rows:
+        print(f"⚠️ Aucune donnée disponible pour la saison '{season}'.")
+        return None
 
     # Écrire dans le fichier CSV
     with open(csv_filename, "w", newline="", encoding="utf-8") as csvfile:
@@ -317,7 +327,7 @@ def generate_player_passeport(player_info):
     """Génère une image de passeport pour le joueur avec les informations extraites."""
     # Générer le passeport du joueur en HTML
     template_path = os.path.join("templates", "passeport_template.html")
-    output_html = os.path.join("output", f"passeport_{player_info.get("name").replace(" ", "")}.html")
+    output_html = os.path.join("output/passeport_player", f"passeport_{player_info.get("name").replace(" ", "")}.html")
     css_path = os.path.abspath("templates/style.css")
 
         
@@ -327,7 +337,7 @@ def generate_player_passeport(player_info):
     template = Template(template_str)
     html_content = template.render(**player_info, css_path=css_path)
         
-    os.makedirs("output", exist_ok=True)
+    os.makedirs("output/passeport_player", exist_ok=True)
     with open(output_html, "w", encoding="utf-8") as f:
         f.write(html_content)
 
@@ -427,7 +437,8 @@ def extract_player_season_stats_all_comps(html, season):
             continue
         
         season_name = cells[0].get_text(strip=True)
-        if not re.match(r"\d{4}-\d{4}", season_name):
+        # Accepter soit YYYY-YYYY soit YYYY
+        if not re.match(r"^\d{4}(-\d{4})?$", season_name):
             continue
         
         # Créer la structure pour la saison si absente
@@ -446,9 +457,12 @@ def extract_player_season_stats_all_comps(html, season):
                 season_data[season_name][cat] = {}
 
             season_data[season_name][cat][sub] = val
-
+    
+    # Retourner toutes les saisons si season=None ou "All"
+    if season is None or str(season).lower() == "all" :
+        return season_data
     # Retourner seulement la saison demandée si trouvée
-    if season in season_data:
+    elif season in season_data:
         return {season: season_data[season]}
     else:
         return {"message": f"Données inconnues pour la saison {season}"}

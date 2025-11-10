@@ -5,10 +5,11 @@ from scraper import *
 def main():
     parser = argparse.ArgumentParser(description="Scraper FBref ")
     parser.add_argument("nom_joueur", type=str, nargs="+", help="Nom du joueur dont on veut les informations")
-    parser.add_argument("--season", type=str, help="Saison du joueur à analyser (ex: '2023-2024')")
+    parser.add_argument("--season", type=str, default= None, help="Saison du joueur à analyser (ex: '2023-2024') ")
     args = parser.parse_args()
 
     name = " ".join(args.nom_joueur).strip()
+    season_args = args.season
     print(f"Recherche pour : {name}")
 
     try:
@@ -28,7 +29,7 @@ def main():
         print(f"URL trouvée : {chosen}")
         
         # Mode stats saison
-        if args.season:
+        if season_args:
             player_url = chosen
             # Générer l'URL All Competitions
             all_comps_url = get_all_comps_url(player_url)
@@ -39,13 +40,18 @@ def main():
             except Exception as e:
                 print("Erreur pendant le téléchargement de la page :", e)
                 sys.exit(3)
- 
-            print(f"📄 Récupération des stats pour la saison {args.season}")
-            season_stats = extract_player_season_stats_all_comps(html_all_comps, args.season)
-            save_season_stats_to_csv(season_stats, player_name=name, season=args.season)
-            sys.exit(0)
             
-        # Mode passeport joueur
+            if season_args.lower() == "all":
+                # Récupérer toutes les saisons
+                season_stats = extract_player_season_stats_all_comps(html_all_comps, season=None)
+            else:
+                # Récupérer uniquement la saison spécifique
+                season_stats = extract_player_season_stats_all_comps(html_all_comps, season=season_args)
+
+            save_season_stats_to_csv(season_stats, player_name=name, season=season_args)
+            sys.exit(0)
+        
+        # Mode passeport joueur (pas de saison spécifiée)
         try:
             code, html = fetch_page(chosen)
             print(f"Requête HTTP : {code}")
