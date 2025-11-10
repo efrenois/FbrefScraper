@@ -5,13 +5,14 @@ import unicodedata
 import unicodedata
 import sys
 import os 
-import asyncio
-import tempfile
-from pyppeteer import launch
+import csv
+import pandas as pd
+from urllib.parse import urlparse
 from difflib import SequenceMatcher
 from bs4 import BeautifulSoup
 from urllib.parse import quote_plus, urljoin
 from jinja2 import Template
+
 
 ################################################################################################################################################
 # PARAMÈTRES GLOBAUX
@@ -44,6 +45,54 @@ def normalize_text(s):
     s = unicodedata.normalize("NFKD", s)
     s = s.encode("ascii", "ignore").decode("utf-8")  # enlève les accents
     return s.lower().strip()
+
+def save_season_stats_to_csv(season_stats, player_name, season):
+    """
+    Sauvegarde les statistiques d'une saison dans un fichier CSV.
+    - season_stats : dict (les données retournées par extract_player_season_stats_all_comps)
+    - player_name : nom du joueur (string)
+    - season : saison (ex: "2023-2024")
+    """
+    if not season_stats or "message" in season_stats:
+        print("⚠️ Aucune donnée à enregistrer.")
+        return None
+
+    # Récupérer les données de la saison
+    data = season_stats.get(season)
+    if not data:
+        print(f"⚠️ Données inconnues pour la saison {season}.")
+        return None
+
+    # Créer le dossier de sortie
+    output_dir = "output"
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Nettoyer le nom du joueur et de la saison pour le nom du fichier
+    safe_player = player_name.replace(" ", "_").replace("/", "-")
+    safe_season = season.replace("/", "-").replace(" ", "")
+
+    csv_filename = os.path.join(output_dir, f"stats_{safe_player}_{safe_season}.csv")
+
+    # Préparer les données à écrire
+    fieldnames = ["Category", "Stat", "Value"]
+    rows = []
+
+    for category, subdict in data.items():
+        for subheader, value in subdict.items():
+            rows.append({
+                "Category": category or "General",
+                "Stat": subheader,
+                "Value": value
+            })
+
+    # Écrire dans le fichier CSV
+    with open(csv_filename, "w", newline="", encoding="utf-8") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+
+    print(f"✅ Données enregistrées dans : {csv_filename}")
+    return csv_filename
 
 ###############################################################################################################################################
 # FONCTIONS PRINCIPALES
@@ -284,3 +333,132 @@ def generate_player_passeport(player_info):
 
     print(f"✅ HTML généré : {output_html}")
     return html_content
+
+
+def get_all_comps_url(player_url):
+    """
+    Transforme l'URL du joueur en URL 'All Competitions'.
+    Ex: 
+    https://fbref.com/en/players/82ec26c1/Lamine-Yamal
+    ->
+    https://fbref.com/en/players/82ec26c1/all_comps/Lamine-Yamal-Stats---All-Competitions
+    """
+    parsed = urlparse(player_url)
+    parts = parsed.path.strip("/").split("/")
+    
+    if len(parts) < 3:
+        raise ValueError("URL du joueur inattendue")
+
+    player_id = parts[2]
+    player_name = parts[3]
+
+    all_comps_path = f"/en/players/{player_id}/all_comps/{player_name}-Stats---All-Competitions"
+    return f"{parsed.scheme}://{parsed.netloc}{all_comps_path}"
+
+        
+def extract_player_season_stats_all_comps(html, season):
+    """
+    Extrait les statistiques de la saison donnée depuis la page 'All Competitions'.
+    Retourne un dict avec les stats organisées par catégorie.
+    """
+    soup = BeautifulSoup(html, "lxml")
+    
+    # Chercher d'abord la table
+    table = soup.find("table", id="stats_standard_collapsed")
+    if not table:
+        return {"message": "table introuvable dans div #stats_standard_collapsed"}
+
+    # Extraire les headers 
+    thead = table.find("thead")
+    categories = []
+    subheaders = []
+
+    headers_rows = thead.find_all("tr")
+    category_row = headers_rows[0]
+    subheader_row = headers_rows[1] 
+    
+    # Étape 1 : Récupérer les catégories avec gestion correcte du colspan
+    for th in category_row.find_all("th"):
+        cat_name = th.get_text(strip=True)
+        colspan = int(th.get("colspan", 1))
+
+        # Si le th est vide mais que c’est le dernier avant un vrai colspan,
+        # on suppose qu’il "prépare" une catégorie
+        if not cat_name and colspan == 1:
+            cat_name = ""
+        for _ in range(colspan):
+            categories.append(cat_name)
+
+    # Étape 2 : Récupérer les sous-headers
+    for th in subheader_row.find_all("th"):
+        subheaders.append(th.get_text(strip=True))
+
+    # Étape 3 : Corriger le décalage s’il existe
+    if len(categories) < len(subheaders):
+        diff = len(subheaders) - len(categories)
+        # Correction spécifique : si la dernière catégorie non vide est suivie de vides,
+        # on prolonge cette dernière catégorie
+        if categories and categories[-1] != "":
+            categories += [categories[-1]] * diff
+        else:
+            categories = [""] * diff + categories
+    elif len(categories) > len(subheaders):
+        categories = categories[:len(subheaders)]
+
+    # Correction spéciale FBref :
+    # Si on a une série initiale de 5 vides mais que la 6e est "Playing Time",
+    # on remplace le 5e vide par cette valeur
+    for i in range(1, len(categories)):
+        if categories[i] != "" and categories[i-1] == "":
+            categories[i-1] = categories[i]
+            break
+    
+    # Étape 4 : Extraire les lignes de données
+    tbody = table.find("tbody")
+    if not tbody:
+        return {"message": "aucune donnée trouvée dans le tableau"}
+    
+    season_data = {}
+    
+    rows = tbody.find_all("tr")
+    for row in rows:
+        cells = row.find_all(["th", "td"])
+        if not cells:
+            continue
+        
+        season_name = cells[0].get_text(strip=True)
+        if not re.match(r"\d{4}-\d{4}", season_name):
+            continue
+        
+        # Créer la structure pour la saison si absente
+        if season_name not in season_data:
+            season_data[season_name] = {}
+            
+        # Associer chaque sous-header à sa catégorie et valeur
+        for idx, cell in enumerate(cells[1:], start=1):
+            if idx >= len(subheaders):
+                break
+            cat = categories[idx]
+            sub = subheaders[idx]
+            val = cell.get_text(strip=True) or "N/A"
+
+            if cat not in season_data[season_name]:
+                season_data[season_name][cat] = {}
+
+            season_data[season_name][cat][sub] = val
+
+    # Retourner seulement la saison demandée si trouvée
+    if season in season_data:
+        return {season: season_data[season]}
+    else:
+        return {"message": f"Données inconnues pour la saison {season}"}
+    
+
+
+
+
+        
+
+
+
+    

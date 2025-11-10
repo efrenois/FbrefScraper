@@ -1,0 +1,34 @@
+Category,Stat,Value
+General,Age,17
+General,Squad,Barcelona
+General,Comp,2 Leagues
+General,Matches,N/A
+Playing Time,MP,8
+Playing Time,Starts,1
+Playing Time,Min,160
+Playing Time,90s,1.8
+Performance,Gls,1
+Performance,Ast,0
+Performance,G+A,1
+Performance,G-PK,1
+Performance,PK,0
+Performance,PKatt,0
+Performance,CrdY,0
+Performance,CrdR,0
+Expected,xG,N/A
+Expected,npxG,N/A
+Expected,xAG,N/A
+Expected,npxG+xAG,N/A
+Progression,PrgC,N/A
+Progression,PrgP,N/A
+Progression,PrgR,N/A
+Per 90 Minutes,Gls,0.56
+Per 90 Minutes,Ast,0.00
+Per 90 Minutes,G+A,0.56
+Per 90 Minutes,G-PK,0.56
+Per 90 Minutes,G+A-PK,0.56
+Per 90 Minutes,xG,N/A
+Per 90 Minutes,xAG,N/A
+Per 90 Minutes,xG+xAG,N/A
+Per 90 Minutes,npxG,N/A
+Per 90 Minutes,npxG+xAG,N/A
