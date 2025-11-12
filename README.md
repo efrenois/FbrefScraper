@@ -46,7 +46,7 @@ Cette commande génère le passeport de Neymar Jr au format HTML et PDF dans le 
 Ouvrez le fichier HTML dans votre navigateur pour visualiser le passeport de Neymar Jr téléchargeable au format PDF.
 
 Voici un exemple du HTML généré: 
-<img width="1582" height="973" alt="ex_HTML_Neymar" src="https://github.com/user-attachments/assets/b6097cbb-8a93-4f62-ae55-a10caded958e" />
+<img width="1582" height="973" alt="ex_HTML_Neymar" src="https://github.com/user-attachments/assets/b2d84116-2830-467f-8866-847795a6543d" />
 
 2. Extraire les statistiques de Neymar Jr sur la saison 2014-2015 en Ligue des champions:
 ```bash
