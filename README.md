@@ -53,7 +53,7 @@ Voici un exemple du HTML généré:
 python main.py 'Neymar' --season '2014-2015' --comp 'ic'
 ```
 Cette commande extrait les statistiques de Neymar Jr pour la saison 2014-2015 en Ligue des champions et les enregistre au format CSV dans le dossier `output/datas_player`.
-<img width="1116" height="706" alt="Capture d’écran 2025-11-12 à 14 49 48" src="https://github.com/user-attachments/assets/b8a98670-bdfe-4181-a9f4-0950f2848c4f" />
+<img width="1116" height="691" alt="Capture d’écran 2025-11-12 à 14 51 05" src="https://github.com/user-attachments/assets/85007173-14c9-4e89-b110-b7790cd9bf57" />
 
 ## Options de ligne de commande
 
