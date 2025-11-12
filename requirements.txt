@@ -1,4 +1,4 @@
-requests
-beautifulsoup4 
-pandas 
-lxml
+beautifulsoup4==4.14.2
+cloudscraper==1.2.71
+Jinja2==3.1.6
+setuptools==80.9.0
