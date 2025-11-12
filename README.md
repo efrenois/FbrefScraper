@@ -1,7 +1,7 @@
 # FBref Scraper
 
 Voici un scraper Python permettant de récupérer les informations et statistiques détaillées des joueurs depuis [FBref.com](https://fbref.com)￼.
-Le projet permet de générer le passeport d’un joueur (téléchargable en pdf) au format HTML ou d’extraire ses statistiques par saison et compétition au format CSV.
+Le projet permet de générer le passeport d’un joueur (téléchargeable en pdf) au format HTML ou d’extraire ses statistiques par saison et compétition au format CSV.
 
 ## Table des matières
 - [Fonctionnalités](#fonctionnalités)
@@ -43,10 +43,8 @@ pip install -r requirements.txt
 python main.py 'Neymar' 
 ```
 Cette commande génère le passeport de Neymar Jr au format HTML et PDF dans le dossier `output/passport_player`.
-Ouvrez le fichier HTML dans votre navigateur pour visualiser le passeport de Neymar Jr téléchargable au format PDF.
+Ouvrez le fichier HTML dans votre navigateur pour visualiser le passeport de Neymar Jr téléchargeable au format PDF.
 
-Voici un exemple de ce à quoi ressemble le HTML généré :
-![Passeport de Neymar Jr](github_files/ex_HTML_Neymar.png)
     
 2. Extraire les statistiques de Neymar Jr sur la saison 2014-2015 en Ligue des champions:
 ```bash
