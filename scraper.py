@@ -6,7 +6,6 @@ import unicodedata
 import sys
 import os 
 import csv
-import pandas as pd
 from urllib.parse import urlparse
 from difflib import SequenceMatcher
 from bs4 import BeautifulSoup
@@ -15,7 +14,7 @@ from jinja2 import Template
 
 
 ################################################################################################################################################
-# PARAMÈTRES GLOBAUX
+# GLOBAL SETTINGS
 ################################################################################################################################################
 
 DEFAULT_HEADERS = {
@@ -28,59 +27,61 @@ DEFAULT_HEADERS = {
 
 BASE = "https://fbref.com"
 
-RATE_SEC = 1.5  # délai entre requêtes
+RATE_SEC = 1.5  # Delay between requests
 
-# session réutilisables 
+# Reusable sessions 
 CLOUDSCRAPER_SESSION = cloudscraper.create_scraper()
 CLOUDSCRAPER_SESSION.headers.update(DEFAULT_HEADERS)
 
 ###############################################################################################################################################
-# FONCTIONS UTILITAIRES
+# UTILITY FUNCTIONS
 ###############################################################################################################################################
 
 def normalize_text(s):
-    """Supprime les accents et met en minuscules."""
+    """Removes accents and converts to lowercase."""
     if not s:
         return ""
     s = unicodedata.normalize("NFKD", s)
-    s = s.encode("ascii", "ignore").decode("utf-8")  # enlève les accents
+    s = s.encode("ascii", "ignore").decode("utf-8")
     return s.lower().strip()
 
-def save_season_stats_to_csv(season_stats, player_name, season):
+def save_season_stats_to_csv(season_stats, player_name, season, comp=None):
     """
-    Sauvegarde les statistiques d'une saison ou de toutes les saisons dans un fichier CSV.
-    - season_stats : dict (les données retournées par extract_player_season_stats_all_comps)
-    - player_name : nom du joueur (string)
-    - season : saison (ex: "2023-2024") ou "All" pour toutes les saisons
+    Saves statistics for one season or all seasons in a CSV file.
+    - season_stats: dict (data returned by extract_player_season_stats_all_comps)
+    - player_name: player name (string)
+    - season: season (e.g., “2023-2024”) or “All” for all seasons
+    - comp: competition (e.g., “dl,” “dc,” “ic,” “nt,” “all”), optional
     """
     if not season_stats or "message" in season_stats:
-        print("⚠️ Aucune donnée à enregistrer.")
+        print("⚠️ No data to record.")
         return None
 
-    # Déterminer si on veut toutes les saisons
+    # Determine whether you want all seasons
     if str(season).lower() == "all" or season is None:
-        data_to_save = season_stats  # toutes les saisons
+        data_to_save = season_stats
         safe_season_name = "All"
     else:
         data_to_save = {season: season_stats.get(season)}
         safe_season_name = season
 
-    # Créer le dossier de sortie
+    # Create the output folder
     output_dir = "output/datas_player"
     os.makedirs(output_dir, exist_ok=True)
 
-    # Nettoyer le nom du joueur pour le nom du fichier
+    # Clean the player and competition names for the file name
     safe_player = player_name.replace(" ", "_").replace("/", "-")
     safe_season_name = safe_season_name.replace("/", "-").replace(" ", "")
+    safe_comp = comp.replace("/", "-").replace(" ", "") if comp else "all"
 
-    csv_filename = os.path.join(output_dir, f"stats_{safe_player}_{safe_season_name}.csv")
+    csv_filename = os.path.join(output_dir, f"stats_{safe_player}_{safe_comp}_{safe_season_name}.csv")
 
-    # Préparer les données à écrire
+    # Prepare the data to be written
     fieldnames = ["Season", "Category", "Stat", "Value"]
     rows = []
 
     for season_key, categories in data_to_save.items():
-        if not categories:  # aucune donnée pour cette saison
+        if not categories:
             continue
         for category, subdict in categories.items():
             for subheader, value in subdict.items():
@@ -92,30 +93,29 @@ def save_season_stats_to_csv(season_stats, player_name, season):
                 })
 
     if not rows:
-        print(f"⚠️ Aucune donnée disponible pour la saison '{season}'.")
+        print(f"⚠️ No data available for the season '{season}'.")
         return None
 
-    # Écrire dans le fichier CSV
+    # Write to CSV file
     with open(csv_filename, "w", newline="", encoding="utf-8") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
 
-    print(f"✅ Données enregistrées dans : {csv_filename}")
+    print(f"✅ Data recorded in : {csv_filename}")
     return csv_filename
 
 ###############################################################################################################################################
-# FONCTIONS PRINCIPALES
+# MAIN FUNCTIONS
 ###############################################################################################################################################
 
 def fetch_page(url, max_retries=3, timeout=15, use_cloudscraper_on_block=True):
     """
-    Télécharge la page et renvoie (status_code, html or None).
-    Essaie first requests, puis cloudscraper en fallback si bloqué.
+    Download the page and return (status_code, html or None).
     """
     last_status = None
     
-    # Fallback cloudscraper si activé
+    # Cloudscraper attempt
     if use_cloudscraper_on_block:
         for attempt in range(max_retries):
             try:
@@ -132,13 +132,13 @@ def fetch_page(url, max_retries=3, timeout=15, use_cloudscraper_on_block=True):
 
             time.sleep(2 ** attempt)
 
-    # tout a échoué -> renvoyer code/erreur
+    # Return code/error
     return (last_status or 0), None
 
 
 def fbref_search(name):
     """
-    Recherche un joueur sur FBref par son nom.
+    Search for a player on FBref by name.
     """
     q = quote_plus(name)
     url = f"{BASE}/search/search.fcgi?search={q}"
@@ -146,9 +146,9 @@ def fbref_search(name):
     status, html = fetch_page(url, max_retries=3, timeout=15, use_cloudscraper_on_block=True)
 
     if status != 200 or not html:
-        # message utile pour debug
-        raise RuntimeError(f"Erreur HTTP {status} lors de la recherche ou page vide.")
-    # Respect du délai global
+        # Message for debugging
+        raise RuntimeError(f"HTTP error {status} during search or empty page.")
+    # Compliance with the overall deadline
     time.sleep(RATE_SEC)
     
     soup = BeautifulSoup(html, "lxml")
@@ -158,10 +158,10 @@ def fbref_search(name):
 
     search_norm = normalize_text(name)
     
-    # Parcours avec boucle while + booléen : on s'arrête dès qu'on trouve le joueur 'name'
+    # Loop : stop as soon as the player ‘name’ is found
     anchors = soup.find_all("a", href=True)
     i = 0
-    # on garde la meilleure correspondance
+    # We keep the best match
     best_match = None
     best_score = 0.0
     while i < len(anchors):
@@ -173,7 +173,7 @@ def fbref_search(name):
         if not href:
             continue
 
-        # filtrer uniquement les liens joueurs FBref
+        # Filter only FBref player links
         if re.match(r"^/en/players/[^/]+/.+", href):
             full = urljoin(BASE, href)
             name_text = text.strip()
@@ -184,49 +184,47 @@ def fbref_search(name):
             seen.add(full)
             results["players"].append((name_text, full))
 
-            # Calcul de similarité textuelle
+            # Text similarity calculation
             ratio = SequenceMatcher(None, search_norm, name_text_norm).ratio()
             if ratio > best_score:
                 best_score = ratio
                 best_match = (name_text, full)
 
     if not results["players"]:
-        raise ValueError(f"Aucun joueur trouvé correspondant précisément à '{name}'.")
+        raise ValueError(f"⚠️ No players found matching exactly '{name}'.")
 
-    # afficher la meilleure correspondance trouvée
+    # Display the best match found
     if best_match:
         return {"players": [best_match]}
     else:
-        raise ValueError(f"Aucun joueur trouvé correspondant à '{name}'.")
+        raise ValueError(f"❌ No players found matching '{name}'.")
     
                      
 def extract_player_info(html, base_url, name):
     """
-    Extrait les informations de base du joueur depuis sa page FBref.
-    Retourne un dict avec les champs principaux.
+    Extracts basic player information from their FBref page.
+    Returns a dictionary with the main fields.
     """
     soup = BeautifulSoup(html, "lxml")
     info = {}
 
-    # Nom principal 
-    # Extraire le nom principal directement depuis la page FBref 
+    # Main name
+    # Extract the main name directly from the FBref page 
     h1 = soup.select_one("#meta h1") or soup.find("h1", {"itemprop": "name"})
     if h1:
         info["name"] = h1.get_text(strip=True)
     else:
-        # fallback : utiliser le nom passé en paramètre si la page ne contient pas le h1 attendu
+        # Use the name passed as a parameter if the page does not contain the expected h1
         info["name"] = "Nom inconnu"
-    # normalisé pour les comparaisons plus bas
+    # Normalized for comparisons below
     search_norm = normalize_text(info["name"])
 
-
-    # Position, pied, nationalité, club
     p_tags = soup.select("#meta p")
     for p in p_tags:
         raw = p.get_text(" ", strip=True)
-        # normaliser les espaces
+        # Standardize whitespaces
         raw = re.sub(r"\s+", " ", raw)
-        # split sur plusieurs séparateurs courants
+        # Split across multiple common separators
         parts = re.split(r"\s*[▪•·|/]\s*", raw)
         for part in parts:
             part = part.strip()
@@ -235,7 +233,7 @@ def extract_player_info(html, base_url, name):
             
             part_norm = normalize_text(part)
             
-            # initialiser les valeurs par défaut une seule fois
+            # Initialize default values once
             if not info.get("_meta_inited"):
                 defaults = {
                     "full_name": "inconnu",
@@ -250,19 +248,18 @@ def extract_player_info(html, base_url, name):
                     info.setdefault(k, v)
                 info["_meta_inited"] = True
 
-            # heuristique pour le nom complet : contient le terme de recherche et n'est pas une ligne de type "Position/Born/Footed/..."
-            # Détecte full_name même si la forme diffère (ex: "Cristiano Ronaldo" vs "Cristiano Ronaldo dos Santos Aveiro")
+            # Detects full_name even if the form differs (e.g., “Cristiano Ronaldo” vs. “Cristiano Ronaldo dos Santos Aveiro”)
             if search_norm and not re.search(r"\b(position|born|footed|national team|club|wages)\b", part_norm):
-                # comparaison par tokens : tous les tokens du nom de recherche présents dans la chaîne candidate
+                # Comparison by tokens: all tokens of the search name present in the candidate string
                 search_tokens = set(search_norm.split())
                 part_tokens = set(part_norm.split())
                 token_match = any(tok in part_tokens for tok in search_tokens)
 
-                # similarité globale pour tolérer ajouts/ordre/ponctuation différents
+                # Overall similarity to tolerate different additions/order/punctuation
                 ratio = SequenceMatcher(None, search_norm, part_norm).ratio()
                 similar = ratio >= 0.70
 
-                # accepter si l'un des critères est rempli
+                # Accept if one of the criteria is met
                 if token_match or similar or part_norm.startswith(search_norm):
                     if info.get("full_name") in (None, "", "inconnu"):
                         info["full_name"] = part.strip()
@@ -274,7 +271,7 @@ def extract_player_info(html, base_url, name):
                 info["position"] = m.group(1).strip()
                 continue
 
-            # Footed (pied)
+            # Footed 
             m = re.search(r"Footed\s*: ?(.+)", part, flags=re.I)
             if m:
                 info["footed"] = m.group(1).strip()
@@ -302,14 +299,14 @@ def extract_player_info(html, base_url, name):
             m = re.search(r"Wages\s*: ?(.+)", part, flags=re.I)
             if m:
                 val = m.group(1).strip()
-                # garder uniquement la première phrase (jusqu'au premier point inclus)
+                # Keep only the first sentence (up to and including the first period)
                 dot = val.find('.')
                 if dot != -1:
                     val = val[:dot+1].strip()
                 info["wages"] = val or "inconnu"
                 continue
 
-    # --- Photo du joueur ---
+    # Photo of the player 
     img_tag = soup.select_one("#meta img")
     if img_tag and img_tag.get("src"):
         img_src = img_tag["src"]
@@ -318,67 +315,87 @@ def extract_player_info(html, base_url, name):
         info["photo_url"] = img_src
     
     if not info: 
-        print("Impossible d'extraire les informations du joueur.")
+        print("⚠️ Unable to retrieve player information.")
         sys.exit(4)
 
     return info
 
 def generate_player_passeport(player_info):
-    """Génère une image de passeport pour le joueur avec les informations extraites."""
-    # Générer le passeport du joueur en HTML
-    template_path = os.path.join("templates", "passeport_template.html")
-    output_html = os.path.join("output/passeport_player", f"passeport_{player_info.get("name").replace(" ", "")}.html")
-    css_path = os.path.abspath("templates/style.css")
-
+    """Generates a passport image for the player with the extracted information."""
+    
+    # Generate the player's passport in HTML
+    template_path = os.path.join("templates", "passport_template.html")
+    output_html = os.path.join("output/passport_player", f"passport_{player_info.get("name").replace(" ", "")}.html")
         
     with open(template_path, "r", encoding="utf-8") as f:
         template_str = f.read()
 
     template = Template(template_str)
-    html_content = template.render(**player_info, css_path=css_path)
+    html_content = template.render(**player_info)
         
-    os.makedirs("output/passeport_player", exist_ok=True)
+    os.makedirs("output/passport_player", exist_ok=True)
     with open(output_html, "w", encoding="utf-8") as f:
         f.write(html_content)
 
-    print(f"✅ HTML généré : {output_html}")
+    print(f"✅ Generated HTML : {output_html}")
     return html_content
 
 
-def get_all_comps_url(player_url):
+def get_competition_url_and_table_id(player_url, comp="all"):
     """
-    Transforme l'URL du joueur en URL 'All Competitions'.
-    Ex: 
-    https://fbref.com/en/players/82ec26c1/Lamine-Yamal
-    ->
-    https://fbref.com/en/players/82ec26c1/all_comps/Lamine-Yamal-Stats---All-Competitions
+    Builds the complete URL and also returns the ID of the corresponding table,
+    depending on the competition selected:
+      - “all” → all competitions combined
+      - “dl”  → domestic leagues
+      - “dc”  → domestic cups
+      - “ic”  → international cups
+      - “nt”  → national team
+    Example:
+      https://fbref.com/en/players/82ec26c1/Lamine-Yamal
+        -> “dl”  → https://fbref.com/en/players/82ec26c1/dom_lg/Lamine-Yamal-Domestic-League-Stats
     """
+    comp = str(comp).lower()
     parsed = urlparse(player_url)
     parts = parsed.path.strip("/").split("/")
-    
+
     if len(parts) < 3:
-        raise ValueError("URL du joueur inattendue")
+        raise ValueError(f"URL du joueur inattendue : {player_url}")
 
     player_id = parts[2]
     player_name = parts[3]
 
-    all_comps_path = f"/en/players/{player_id}/all_comps/{player_name}-Stats---All-Competitions"
-    return f"{parsed.scheme}://{parsed.netloc}{all_comps_path}"
+    # Competitions dictionary
+    comp_map = {
+        "all": ("all_comps", f"{player_name}-Stats---All-Competitions", "stats_standard_collapsed"),
+        "dl":  ("dom_lg",  f"{player_name}-Domestic-League-Stats",       "stats_standard_dom_lg"),
+        "dc":  ("dom_cup", f"{player_name}-Domestic-Cup-Stats",          "stats_standard_dom_cup"),
+        "ic":  ("intl_cup", f"{player_name}-International-Cup-Stats",    "stats_standard_intl_cup"),
+        "nt":  ("nat_tm",  f"{player_name}-National-Team-Stats",         "stats_standard_nat_tm"),
+    }
 
-        
-def extract_player_season_stats_all_comps(html, season):
+    if comp not in comp_map:
+        raise ValueError(f" ⚠️ Unknown type of competition : {comp}")
+
+    folder, suffix, table_id = comp_map[comp]
+
+    comp_path = f"/en/players/{player_id}/{folder}/{suffix}"
+    full_url = f"{parsed.scheme}://{parsed.netloc}{comp_path}"
+
+    return full_url, table_id
+     
+def extract_player_stats_by_competition(html, table_id, season):
     """
-    Extrait les statistiques de la saison donnée depuis la page 'All Competitions'.
-    Retourne un dict avec les stats organisées par catégorie.
+    Extracts statistics for the given season from the 'All Competitions' page.
+    Returns a dictionary with statistics organized by category.
     """
     soup = BeautifulSoup(html, "lxml")
     
-    # Chercher d'abord la table
-    table = soup.find("table", id="stats_standard_collapsed")
+    # Look for the table first
+    table = soup.find("table", id=table_id)
     if not table:
-        return {"message": "table introuvable dans div #stats_standard_collapsed"}
+        return {"message": "⚠️ Table not found in div #stats_standard_collapsed"}
 
-    # Extraire les headers 
+    # Extract headers 
     thead = table.find("thead")
     categories = []
     subheaders = []
@@ -387,27 +404,24 @@ def extract_player_season_stats_all_comps(html, season):
     category_row = headers_rows[0]
     subheader_row = headers_rows[1] 
     
-    # Étape 1 : Récupérer les catégories avec gestion correcte du colspan
+    # Retrieve categories with correct colspan management
     for th in category_row.find_all("th"):
         cat_name = th.get_text(strip=True)
         colspan = int(th.get("colspan", 1))
 
-        # Si le th est vide mais que c’est le dernier avant un vrai colspan,
-        # on suppose qu’il "prépare" une catégorie
         if not cat_name and colspan == 1:
             cat_name = ""
         for _ in range(colspan):
             categories.append(cat_name)
 
-    # Étape 2 : Récupérer les sous-headers
+    # Retrieve subheaders
     for th in subheader_row.find_all("th"):
         subheaders.append(th.get_text(strip=True))
 
-    # Étape 3 : Corriger le décalage s’il existe
+    # Correct the offset if it exists
     if len(categories) < len(subheaders):
         diff = len(subheaders) - len(categories)
-        # Correction spécifique : si la dernière catégorie non vide est suivie de vides,
-        # on prolonge cette dernière catégorie
+
         if categories and categories[-1] != "":
             categories += [categories[-1]] * diff
         else:
@@ -415,18 +429,15 @@ def extract_player_season_stats_all_comps(html, season):
     elif len(categories) > len(subheaders):
         categories = categories[:len(subheaders)]
 
-    # Correction spéciale FBref :
-    # Si on a une série initiale de 5 vides mais que la 6e est "Playing Time",
-    # on remplace le 5e vide par cette valeur
     for i in range(1, len(categories)):
         if categories[i] != "" and categories[i-1] == "":
             categories[i-1] = categories[i]
             break
     
-    # Étape 4 : Extraire les lignes de données
+    # Extract data rows
     tbody = table.find("tbody")
     if not tbody:
-        return {"message": "aucune donnée trouvée dans le tableau"}
+        return {"message": "⚠️ no data found in the table"}
     
     season_data = {}
     
@@ -437,15 +448,15 @@ def extract_player_season_stats_all_comps(html, season):
             continue
         
         season_name = cells[0].get_text(strip=True)
-        # Accepter soit YYYY-YYYY soit YYYY
+        # Accept either YYYY-YYYY or YYYY
         if not re.match(r"^\d{4}(-\d{4})?$", season_name):
             continue
         
-        # Créer la structure pour la saison si absente
+        # Create the structure for the season that is so lacking
         if season_name not in season_data:
             season_data[season_name] = {}
             
-        # Associer chaque sous-header à sa catégorie et valeur
+        # Associate each subheader with its category and value
         for idx, cell in enumerate(cells[1:], start=1):
             if idx >= len(subheaders):
                 break
@@ -458,21 +469,9 @@ def extract_player_season_stats_all_comps(html, season):
 
             season_data[season_name][cat][sub] = val
     
-    # Retourner toutes les saisons si season=None ou "All"
     if season is None or str(season).lower() == "all" :
         return season_data
-    # Retourner seulement la saison demandée si trouvée
     elif season in season_data:
         return {season: season_data[season]}
     else:
-        return {"message": f"Données inconnues pour la saison {season}"}
-    
-
-
-
-
-        
-
-
-
-    
+        return {"message": f"⚠️ Data unknown for the season {season}"}

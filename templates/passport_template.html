@@ -69,11 +69,8 @@
         .passport-container {
             display: flex;
             flex-direction: column;
-            /* place la carte au-dessus du bouton */
             align-items: center;
-            /* centre horizontalement */
             gap: 20px;
-            /* espace entre la carte et le bouton */
         }
 
         #download-pdf-btn {
@@ -112,28 +109,25 @@
         </div>
 
         <button id="download-pdf-btn">📥 Télécharger le passeport</button>
-        <!-- Librairie html2pdf.js -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
         <script>
             document.getElementById("download-pdf-btn").addEventListener("click", () => {
                 const element = document.querySelector(".card");
 
-                // Options de rendu
                 const opt = {
                     margin: 0.2,
                     filename: 'passeport_{{ name }}.pdf',
                     image: { type: 'jpeg', quality: 0.98 },
                     html2canvas: {
                         scale: 2,
-                        useCORS: true,        // 🔹 Autorise les images cross-origin
+                        useCORS: true,
                         allowTaint: true,
                         logging: true
                     },
                     jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
                 };
 
-                // Lancer la conversion et le téléchargement
                 html2pdf().set(opt).from(element).save();
             });
         </script>
