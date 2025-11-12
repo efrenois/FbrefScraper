@@ -19,37 +19,37 @@ Le projet permet de générer le passeport d’un joueur (téléchargable en pdf
 
 ## Prérequis
 ```bash
-   requirements.txt
+requirements.txt
 ```
 ## Installation
 1. Cloner le dépôt GitHub :
 ```bash
-    git clone "repo_url"
+git clone "repo_url"
 ```
 2. Créer un environnement virtuel (optionnel mais recommandé) :
 ```bash
-    python -m venv venv
-    source venv/bin/activate  # Sur Windows : venv\Scripts\activate
+python -m venv venv
+source venv/bin/activate  # Sur Windows : venv\Scripts\activate
 ```
 3. Installer les dépendances :
 ```bash
-    pip install -r requirements.txt
+pip install -r requirements.txt
 ```   
 
 ## Utilisation
 
 1. Générer le passeport de Neymar Jr:
 ```bash
-    python main.py 'Neymar' 
+python main.py 'Neymar' 
 ```
 Cette commande génère le passeport de Neymar Jr au format HTML et PDF dans le dossier `output/passport_player`.
 Ouvrez le fichier HTML dans votre navigateur pour visualiser le passeport de Neymar Jr téléchargable au format PDF.
     
 2. Extraire les statistiques de Neymar Jr sur la saison 2014-2015 en Ligue des champions:
-    ```bash
-    python main.py 'Neymar' --season '2014-2015' --comp 'ic'
-    ```
-    Cette commande extrait les statistiques de Neymar Jr pour la saison 2014-2015 en Ligue des champions et les enregistre au format CSV dans le dossier `output/datas_player`.
+```bash
+python main.py 'Neymar' --season '2014-2015' --comp 'ic'
+```
+Cette commande extrait les statistiques de Neymar Jr pour la saison 2014-2015 en Ligue des champions et les enregistre au format CSV dans le dossier `output/datas_player`.
 
 ## Options de ligne de commande
 - `player_name` : Nom du joueur dont vous souhaitez récupérer les informations (obligatoire).
