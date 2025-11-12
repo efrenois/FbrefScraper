@@ -35,7 +35,6 @@ def main():
     if results.get("players"):
         _, chosen = results["players"][0]
         print(f"✅ URL found : {chosen}")
-
         # Passport
         if not season_args and not comp_args:
             try:
@@ -53,6 +52,8 @@ def main():
         try:
             # Generate the URL and ID of the HTML table according to the selected competition.
             comp_url, table_id = get_competition_url_and_table_id(player_url, comp=comp_args)
+            print(f"✅ URL found : {comp_url}")
+
         except Exception as e:
             print("❌ Error generating URL  :", e)
             sys.exit(4)

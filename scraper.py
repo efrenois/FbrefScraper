@@ -54,7 +54,7 @@ def save_season_stats_to_csv(season_stats, player_name, season, comp=None):
     - comp: competition (e.g., “dl,” “dc,” “ic,” “nt,” “all”), optional
     """
     if not season_stats or "message" in season_stats:
-        print("⚠️ No data to record.")
+        print(f"⚠️ No data to record for {season}.")
         return None
 
     # Determine whether you want all seasons
@@ -338,7 +338,7 @@ def generate_player_passeport(player_info):
         f.write(html_content)
 
     print(f"✅ Generated HTML : {output_html}")
-    return html_content
+    return html_content, output_html
 
 
 def get_competition_url_and_table_id(player_url, comp="all"):
