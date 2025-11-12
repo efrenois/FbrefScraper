@@ -45,6 +45,8 @@ python main.py 'Neymar'
 Cette commande génère le passeport de Neymar Jr au format HTML et PDF dans le dossier `output/passport_player`.
 Ouvrez le fichier HTML dans votre navigateur pour visualiser le passeport de Neymar Jr téléchargeable au format PDF.
 
+Voici un exemple de HTML généré :
+![exemple](/Users/Etan/Téléchargements/ex_HTML_Neymar.png)
     
 2. Extraire les statistiques de Neymar Jr sur la saison 2014-2015 en Ligue des champions:
 ```bash
@@ -75,4 +77,3 @@ FbrefScrapper/
 ```
 ## Limitation
 •	Dépend du format des pages FBref. Les changements sur le site peuvent casser le scraper.
-
