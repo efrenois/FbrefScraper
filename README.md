@@ -18,37 +18,37 @@ Le projet permet de générer le passeport d’un joueur (téléchargable en pdf
 - Extraction des statistiques détaillées du joueur par saison et compétition au format CSV.
 
 ## Prérequis
-"bash
+```bash
    pip install requirements.txt
-"
+```
 ## Installation
 1. Cloner le dépôt GitHub :
-    "bash
-    git clone https://github.com/ton-utilisateur/fbref-scraper.git
-    "
+```bash
+    git clone 
+```
 2. Créer un environnement virtuel (optionnel mais recommandé) :
-    "bash
+```bash
     python -m venv venv
     source venv/bin/activate  # Sur Windows : venv\Scripts\activate
-    "
+```
 3. Installer les dépendances :
-    "bash
+```bash
     pip install -r requirements.txt
-    "   
+```   
 
 ## Utilisation
 
 1. Générer le passeport de Neymar Jr:
-    "bash
+```bash
     python main.py 'Neymar' 
-    "
+```
     Cette commande génère le passeport de Neymar Jr au format HTML et PDF dans le dossier `output/passport_player`.
     Ouvrez le fichier HTML dans votre navigateur pour visualiser le passeport de Neymar Jr téléchargable au format PDF.
     
 2. Extraire les statistiques de Neymar Jr sur la saison 2014-2015 en Ligue des champions:
-    "bash
+    ```bash
     python main.py 'Neymar' --season '2014-2015' --comp 'ic'
-    "
+    ```
     Cette commande extrait les statistiques de Neymar Jr pour la saison 2014-2015 en Ligue des champions et les enregistre au format CSV dans le dossier `output/datas_player`.
 
 ## Options de ligne de commande
@@ -62,7 +62,7 @@ Le projet permet de générer le passeport d’un joueur (téléchargable en pdf
     - `nt` : Équipe nationale.
 
 ## Structure du projet
-"bash
+```bash
 FbrefScrapper/
 ├── main.py                         # Script principal pour exécuter le scraper
 ├── output                          # Dossier de sortie pour les passeports et données
@@ -71,7 +71,7 @@ FbrefScrapper/
 ├── scraper.py                      # Module de scraping FBref
 ├── templates                       # Modèles HTML pour le passeport joueur    
 │   └── passport_template.html
-"
+```
 ## Limitation
 •	Dépend du format des pages FBref. Les changements sur le site peuvent casser le scraper.
 
