@@ -1,0 +1,35 @@
+Season,Category,Stat,Value
+2014-2015,General,Age,22
+2014-2015,General,Squad,Barcelona
+2014-2015,General,Comp,1.Champions Lg
+2014-2015,General,LgRank,W
+2014-2015,General,Matches,Matches
+2014-2015,Playing Time,MP,12
+2014-2015,Playing Time,Starts,12
+2014-2015,Playing Time,Min,"1,027"
+2014-2015,Playing Time,90s,11.4
+2014-2015,Performance,Gls,10
+2014-2015,Performance,Ast,1
+2014-2015,Performance,G+A,11
+2014-2015,Performance,G-PK,10
+2014-2015,Performance,PK,0
+2014-2015,Performance,PKatt,0
+2014-2015,Performance,CrdY,1
+2014-2015,Performance,CrdR,0
+2014-2015,Expected,xG,N/A
+2014-2015,Expected,npxG,N/A
+2014-2015,Expected,xAG,N/A
+2014-2015,Expected,npxG+xAG,N/A
+2014-2015,Progression,PrgC,N/A
+2014-2015,Progression,PrgP,N/A
+2014-2015,Progression,PrgR,N/A
+2014-2015,Per 90 Minutes,Gls,0.88
+2014-2015,Per 90 Minutes,Ast,0.09
+2014-2015,Per 90 Minutes,G+A,0.96
+2014-2015,Per 90 Minutes,G-PK,0.88
+2014-2015,Per 90 Minutes,G+A-PK,0.96
+2014-2015,Per 90 Minutes,xG,N/A
+2014-2015,Per 90 Minutes,xAG,N/A
+2014-2015,Per 90 Minutes,xG+xAG,N/A
+2014-2015,Per 90 Minutes,npxG,N/A
+2014-2015,Per 90 Minutes,npxG+xAG,N/A

@@ -8,7 +8,7 @@ Le projet permet de générer le passeport d’un joueur (téléchargable en pdf
 - [Prérequis](#prérequis)
 - [Installation](#installation)
 - [Utilisation](#utilisation)
-- [options de ligne de commande](#options-de-ligne-de-commande)
+- [Options de ligne de commande](#options-de-ligne-de-commande)
 - [Structure du projet](#structure-du-projet)
 - [Limitation](#limitation)
 
@@ -18,7 +18,6 @@ Le projet permet de générer le passeport d’un joueur (téléchargable en pdf
 - Extraction des statistiques détaillées du joueur par saison et compétition au format CSV.
 
 ## Prérequis
-
 "bash
    pip install requirements.txt
 "
@@ -52,7 +51,7 @@ Le projet permet de générer le passeport d’un joueur (téléchargable en pdf
     "
     Cette commande extrait les statistiques de Neymar Jr pour la saison 2014-2015 en Ligue des champions et les enregistre au format CSV dans le dossier `output/datas_player`.
 
-## options de ligne de commande
+## Options de ligne de commande
 - `player_name` : Nom du joueur dont vous souhaitez récupérer les informations (obligatoire).
 - `--season` : Saison du joueur à analyser (exemple : `2014-2015`). Utilisez `all` ou `All` pour toutes les saisons.
 - `--comp` : Compétition à analyser. Options disponibles :
