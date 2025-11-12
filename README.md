@@ -1,6 +1,6 @@
 # FBref Scraper
 
-Un outil Python pour récupérer les informations et statistiques détaillées des joueurs depuis FBref.com￼.
+Voici un scraper Python permettant de récupérer les informations et statistiques détaillées des joueurs depuis [FBref.com](https://fbref.com)￼.
 Le projet permet de générer le passeport d’un joueur (téléchargable en pdf) au format HTML ou d’extraire ses statistiques par saison et compétition au format CSV.
 
 ## Table des matières
