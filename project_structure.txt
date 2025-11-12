@@ -1,0 +1,68 @@
+.
+├── __pycache__
+│   └── scraper.cpython-313.pyc
+├── fbref_scrapper.egg-info
+│   ├── dependency_links.txt
+│   ├── entry_points.txt
+│   ├── PKG-INFO
+│   ├── requires.txt
+│   ├── SOURCES.txt
+│   └── top_level.txt
+├── main.py
+├── output
+├── project_structure.txt
+├── README.md
+├── requirements.txt
+├── scraper.py
+├── setup.py
+├── templates
+│   └── passport_template.html
+└── venv
+    ├── bin
+    │   ├── activate
+    │   ├── activate.csh
+    │   ├── activate.fish
+    │   ├── Activate.ps1
+    │   ├── debugpy
+    │   ├── debugpy-adapter
+    │   ├── dotenv
+    │   ├── f2py
+    │   ├── fbref-scraper
+    │   ├── fonttools
+    │   ├── ipython
+    │   ├── ipython3
+    │   ├── jupyter
+    │   ├── jupyter-kernel
+    │   ├── jupyter-kernelspec
+    │   ├── jupyter-migrate
+    │   ├── jupyter-run
+    │   ├── jupyter-troubleshoot
+    │   ├── normalizer
+    │   ├── numpy-config
+    │   ├── pip
+    │   ├── pip3
+    │   ├── pip3.13
+    │   ├── pipreqs
+    │   ├── py.test
+    │   ├── pyftmerge
+    │   ├── pyftsubset
+    │   ├── pygmentize
+    │   ├── pyppeteer-install
+    │   ├── pytest
+    │   ├── python -> python3.13
+    │   ├── python3 -> python3.13
+    │   ├── python3.13 -> /opt/homebrew/opt/python@3.13/bin/python3.13
+    │   ├── tqdm
+    │   ├── ttx
+    │   ├── weasyprint
+    │   └── wsdump
+    ├── include
+    │   └── python3.13
+    ├── lib
+    │   └── python3.13
+    ├── pyvenv.cfg
+    └── share
+        ├── jupyter
+        └── man
+
+14 directories, 52 files

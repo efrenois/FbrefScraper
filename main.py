@@ -5,8 +5,8 @@ from scraper import *
 def main():
     parser = argparse.ArgumentParser(description="Scraper FBref ")
     parser.add_argument("player_name", type=str, nargs="+", help="Name of the player whose information you want")
-    parser.add_argument("--comp", type=str, default=None, choices=["all", "dl", "dc", "ic", "nt"],
-                    help="Competitions : all (all competitions), dl (domestic leagues), dc (domestic cups), ic (international cups), nt (national team)")
+    parser.add_argument("--comp", type=str, default=None, choices=["all", "dl", "dc", "ic", "nt"], 
+                        help="Competitions : all (all competitions), dl (domestic leagues), dc (domestic cups), ic (international cups), nt (national team)")
     parser.add_argument("--season", type=str, default= None, help="Player season to be analyzed (e.g., '2014-2015'). Use 'all' for all seasons.")
     args = parser.parse_args()
     
