@@ -36,8 +36,17 @@ source venv/bin/activate  # Sur Windows : venv\Scripts\activate
 pip install -r requirements.txt
 ```   
 
-## Utilisation
+## Utilisation 
 
+Tout d'abord, cet outil peut être utilisé via une interface graphique Streamlit ou en ligne de commande.
+### Interface graphique Streamlit
+Lancez l'interface Streamlit avec la commande suivante :
+```bash
+streamlit run gui_streamlit.py
+```
+Cela ouvrira une interface web où vous pourrez entrer le nom du joueur, la saison et la compétition pour extraire les données souhaitées.
+
+### Ligne de commande
 1. Générer le passeport de Neymar Jr:
 ```bash
 python main.py 'Neymar' 
@@ -74,7 +83,8 @@ FbrefScrapper/
 ├── output                          # Dossier de sortie pour les passeports et données
 ├── README.md                       # Documentation du projet 
 ├── requirements.txt                # Fichier des dépendances Python
-├── scraper.py                      # Module de scraping FBref
+├── scraper.py                      # Module principal du scraper  
+├── gui_streamlit.py                # Interface utilisateur Streamlit
 ├── templates                       # Modèles HTML pour le passeport joueur    
 │   └── passport_template.html
 ```
