@@ -1,14 +1,6 @@
 import streamlit as st
 import pandas as pd
-from scraper import (
-    fbref_search,
-    fetch_page,
-    extract_player_info,
-    generate_player_passeport,
-    get_competition_url_and_table_id,
-    extract_player_stats_by_competition,
-    save_season_stats_to_csv
-)
+from scraper import *
 import os
 
 st.set_page_config(page_title="FBref Scraper", page_icon="⚽", layout="wide")
