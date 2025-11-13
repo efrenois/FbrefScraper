@@ -16,6 +16,7 @@ Le projet permet de générer le passeport d’un joueur (téléchargeable en pd
 - Récupération automatique des informations d’un joueur : nom, photo, position, pied fort, date de naissance, club, équipe nationale, salaire.
 - Génération d’un passeport joueur avec toute ses informations au format HTML et passeport téléchargeable au format PDF.
 - Extraction des statistiques détaillées du joueur par saison et compétition au format CSV.
+- Comparaison des performances entre deux joueurs.
 
 ## Prérequis
 ```bash
@@ -39,12 +40,6 @@ pip install -r requirements.txt
 ## Utilisation 
 
 Tout d'abord, cet outil peut être utilisé via une interface graphique Streamlit ou en ligne de commande.
-### Interface graphique Streamlit
-Lancez l'interface Streamlit avec la commande suivante :
-```bash
-streamlit run gui_streamlit.py
-```
-Cela ouvrira une interface web où vous pourrez entrer le nom du joueur, la saison et la compétition pour extraire les données souhaitées.
 
 ### Ligne de commande
 1. Générer le passeport de Neymar Jr:
@@ -64,6 +59,19 @@ python main.py 'Neymar' --season '2014-2015' --comp 'ic'
 Cette commande extrait les statistiques de Neymar Jr pour la saison 2014-2015 en Ligue des champions et les enregistre au format CSV dans le dossier `output/datas_player`.
 
 <img width="1116" height="691" alt="Capture d’écran 2025-11-12 à 14 51 05" src="https://github.com/user-attachments/assets/85007173-14c9-4e89-b110-b7790cd9bf57" />
+
+3. Comparer les statistiques de Neymar Jr et Kylian Mbappé sur la saison 2022-2023 en Ligue 1:
+```bash
+python main.py 'Neymar' 'Kylian Mbappé' --season '2022-2023' --comp 'dl'
+```
+Cette commande compare les statistiques de Neymar Jr et Kylian Mbappé pour la saison 2022-2023 en Ligue 1 et affiche un graphique comparatif.
+
+### Interface graphique Streamlit
+Lancez l'interface Streamlit avec la commande suivante :
+```bash
+streamlit run gui_streamlit.py
+```
+Cela ouvrira une interface web où vous pourrez jouer avec les fonctionnalités du scraper de manière interactive.
 
 ## Options de ligne de commande
 
