@@ -11,7 +11,7 @@ def main():
     args = parser.parse_args()
     
 
-    name = " ".join(args.player_name).strip()
+    names = args.player_name
     season_args = args.season
     comp_args = args.comp 
     
@@ -21,57 +21,87 @@ def main():
         print("Example of a valid command: python3 main.py 'Lionel Messi' --season '2014-2015' --comp 'dl'")
         sys.exit(1)
 
-    print(f"⚙️ Searching for : {name}")
+    print(f"🔍 Searching for : {names}")
 
-    try:
-        results = fbref_search(name)
-    except ValueError as ve:
-        print("❌ Search declined :", ve)
-        sys.exit(2)
-    except Exception as e:
-        print("❌ Error during search :", e)
-        sys.exit(2)
+    if len(names) == 1:
+        try:
+            name = " ".join(names).strip()
+            results = fbref_search(name)
+        except ValueError as ve:
+            print("❌ Search declined :", ve)
+            sys.exit(2)
+        except Exception as e:
+            print("❌ Error during search :", e)
+            sys.exit(2)
 
-    if results.get("players"):
-        _, chosen = results["players"][0]
-        print(f"✅ URL found : {chosen}")
-        # Passport
-        if not season_args and not comp_args:
+        if results.get("players"):
+            _, chosen = results["players"][0]
+            print(f"✅ URL found : {chosen}")
+            # Passport
+            if not season_args and not comp_args:
+                try:
+                    _, html = fetch_page(chosen)
+                except Exception as e:
+                    print("❌ Error while downloading the page :", e)
+                    sys.exit(3)
+
+                player_info = extract_player_info(html, chosen, name)
+                generate_player_passeport(player_info)
+                sys.exit(0)
+
+            # Stats by competition and season
+            player_url = chosen
             try:
-                _, html = fetch_page(chosen)
+                # Generate the URL and ID of the HTML table according to the selected competition.
+                comp_url, table_id = get_competition_url_and_table_id(player_url, comp=comp_args)
+                print(f"✅ URL found : {comp_url}")
+
             except Exception as e:
-                print("❌ Error while downloading the page :", e)
+                print("❌ Error generating URL  :", e)
+                sys.exit(4)
+
+            try:
+                _, html_comp = fetch_page(comp_url)
+            except Exception as e:
+                print("❌ Error while downloading the competition page :", e)
                 sys.exit(3)
 
-            player_info = extract_player_info(html, chosen, name)
-            generate_player_passeport(player_info)
+            # Extract statistics by season
+            season_param = season_args
+            stats = extract_player_stats_by_competition(html_comp, table_id, season=season_param)
+
+            # Save as CSV
+            save_season_stats_to_csv(stats, player_name=name, season=season_args, comp=comp_args)
+            sys.exit(0) 
+            
+    elif len(names) >= 2:
+        player_stats_list = []
+
+        for name in names:
+            name = name.strip()
+            print(f"⚙️ Extraction for {name}...")
+            results = fbref_search(name)
+            if not results.get("players"):
+                print(f"⚠️ No results found for {name}")
+                continue
+
+            _, chosen = results["players"][0]
+            comp_url, table_id = get_competition_url_and_table_id(chosen, comp=comp_args)
+            _, html_comp = fetch_page(comp_url)
+            season_param = season_args
+            stats = extract_player_stats_by_competition(html_comp, table_id, season=season_param)
+
+            core_stats = extract_core_stats(stats, name)
+            player_stats_list.append(core_stats)
+
+        if len(player_stats_list) < 2:
+            print("⚠️ Cannot compare: only one valid player found.")
             sys.exit(0)
 
-        # Stats by competition and season
-        player_url = chosen
-        try:
-            # Generate the URL and ID of the HTML table according to the selected competition.
-            comp_url, table_id = get_competition_url_and_table_id(player_url, comp=comp_args)
-            print(f"✅ URL found : {comp_url}")
-
-        except Exception as e:
-            print("❌ Error generating URL  :", e)
-            sys.exit(4)
-
-        try:
-            _, html_comp = fetch_page(comp_url)
-        except Exception as e:
-            print("❌ Error while downloading the competition page :", e)
-            sys.exit(3)
-
-        # Extract statistics by season
-        season_param = None if (season_args is None or season_args.lower() == "all") else season_args
-        stats = extract_player_stats_by_competition(html_comp, table_id, season=season_param)
-
-        # Save as CSV
-        save_season_stats_to_csv(stats, player_name=name, season=season_args, comp=comp_args)
-        sys.exit(0)
-
+        print("\n📊 Generation of the comparative graph...")
+        fig = compare_players_chart(player_stats_list, season=season_args, comp=comp_args)
+        fig.show()
+        
     else:
         print("⚠️ No results found on FBref.")
         sys.exit(0)

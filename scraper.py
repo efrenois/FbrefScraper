@@ -6,6 +6,8 @@ import unicodedata
 import sys
 import os 
 import csv
+import pandas as pd
+import plotly.graph_objects as go
 from urllib.parse import urlparse
 from difflib import SequenceMatcher
 from bs4 import BeautifulSoup
@@ -433,23 +435,34 @@ def extract_player_stats_by_competition(html, table_id, season):
         if categories[i] != "" and categories[i-1] == "":
             categories[i-1] = categories[i]
             break
-    
-    # Extract data rows
-    tbody = table.find("tbody")
-    if not tbody:
-        return {"message": "⚠️ no data found in the table"}
-    
+        
     season_data = {}
     
-    rows = tbody.find_all("tr")
+    if season is not None and str(season).lower() == "all":
+        tfoot = table.find("tfoot")
+        rows = [tfoot.find("tr")] if tfoot else []
+        # Remove "Age" column if present in the footer
+        if "Age" in subheaders:
+            age_index = subheaders.index("Age")
+            subheaders.pop(age_index)
+            categories.pop(age_index)  
+    else: 
+        # Extract data rows
+        tbody = table.find("tbody")
+        if not tbody:
+            return {"message": "⚠️ no data found in the table"}
+        rows = tbody.find_all("tr")
+        
     for row in rows:
         cells = row.find_all(["th", "td"])
         if not cells:
             continue
         
         season_name = cells[0].get_text(strip=True)
+        if season is not None and str(season).lower() == "all":
+            season_name = "All"
         # Accept either YYYY-YYYY or YYYY
-        if not re.match(r"^\d{4}(-\d{4})?$", season_name):
+        elif not re.match(r"^\d{4}(-\d{4})?$", season_name):
             continue
         
         # Create the structure for the season that is so lacking
@@ -475,3 +488,139 @@ def extract_player_stats_by_competition(html, table_id, season):
         return {season: season_data[season]}
     else:
         return {"message": f"⚠️ Data unknown for the season {season}"}
+    
+def extract_core_stats(stats_dict, player_name):
+    """
+    Extracts statistics for a player, keeping only selected categories:
+    'Playing Time', 'Performance', and 'Expected'.
+    Each category is retained to avoid collisions in metric names.
+    """
+    core_stats = {"Player": player_name}
+
+    # Define the categories to keep
+    allowed_categories = {"Playing Time", "Performance", "Expected"}
+
+    for season, categories in stats_dict.items():
+        for category, substats in categories.items():
+            if category not in allowed_categories:
+                continue  
+
+            for key, value in substats.items():
+                
+                clean_category = category.replace(" ", "_").lower()
+                clean_key = key.replace(" ", "_").lower()
+                metric_name = f"{clean_category}_{clean_key}"
+                core_stats[metric_name] = value
+    return core_stats
+
+def compare_players_chart(stats_list, season, comp):
+    """
+    Compare two players with an interactive bar chart.
+    Hover shows player name, value, and statistic meaning.
+    """
+    if not stats_list or len(stats_list) < 2:
+        print("⚠️ At least two players are required to compare.")
+        return
+
+    # Create DataFrame
+    df = pd.DataFrame(stats_list)
+    df.set_index("Player", inplace=True)
+    df = df.replace({r',': ''}, regex=True)
+    df = df.apply(pd.to_numeric, errors='coerce')
+    columns_to_drop = ["playing_time_min", "playing_time_90s"]
+    df = df.drop(columns=[col for col in columns_to_drop if col in df.columns])
+    df = df.dropna(axis=1, how="all")
+    
+    # Common statistics
+    common_stats = [col for col in df.columns if not df[col].isna().any()]
+    if not common_stats:
+        print("⚠️ No common statistics found between players.")
+        return
+
+    df_to_plot = df[common_stats]
+    player1, player2 = df_to_plot.index.tolist()
+
+    # Dictionary for full names of stats
+    stat_meaning = {
+        "playing_time_mp": "Matches Played",
+        "playing_time_starts": "Games started by player",
+        "performance_gls": "Goals",
+        "performance_ast": "Assists",
+        "performance_g+a": "Goals + Assists",
+        "performance_g-pk": "Non-penalty Goals",
+        "performance_pk": "Penalty Kicks Made",
+        "performance_pkatt": "Penalty Kicks Attempted",
+        "performance_crdy": "Yellow Cards",
+        "performance_crdr": "Red Cards",
+        "expected_xg": "Expected Goals",
+        "expected_npxg": "Non-penalty Expected Goals",
+        "expected_xag": "Expected Assisted Goals",
+        "expected_npxg+xag": "Non-penalty Expected Goals + Expected Assisted Goals",
+    }
+
+    # On mappe les noms de colonnes du DataFrame aux labels lisibles
+    display_labels = [stat_meaning.get(stat, stat) for stat in common_stats]
+    
+    # Build interactive figure
+    fig = go.Figure()
+
+    hover_texts1 = [
+        f"{abs(val)}" for val, _ in zip(df_to_plot.loc[player1].values, common_stats)
+    ]
+
+    fig.add_trace(go.Bar(
+        y=display_labels,
+        x=-df_to_plot.loc[player1].values,  
+        orientation='h',
+        name=player1,
+        marker_color="royalblue",
+        text=None,  
+        hovertemplate="<br>%{customdata}<br><extra></extra>",
+        customdata=hover_texts1, 
+        hoverlabel=dict(
+            align="left",       
+            bgcolor="lightblue",  
+            bordercolor="blue",   
+            font=dict(color="black")
+        )   
+    ))
+
+    fig.add_trace(go.Bar(
+        y=display_labels,
+        x=df_to_plot.loc[player2].values,
+        orientation='h',
+        name=player2,
+        marker_color="crimson",
+        text=None,  # aucune valeur affichée directement sur la barre
+        hovertemplate="<br>%{x}<br><extra></extra>",
+        hoverlabel=dict(
+            align="left",       
+            bgcolor="#f17272",  
+            bordercolor="red",   
+            font=dict(color="black")
+        )   
+    ))
+
+    # Layout with names in the middle
+    max_val = max(df_to_plot.max())  # largest value for scaling
+    fig.update_layout(
+        title=dict(
+            text=f"Player Comparison (Season: {season}, Competition: {comp})",
+            x=0.5,           
+            xanchor='center', 
+            yanchor='top',    
+            font=dict(size=18, family="Arial")
+        ),        
+        barmode='overlay',
+        xaxis=dict(
+            title="Values",
+            tickvals=[-max_val, -max_val/2, 0, max_val/2, max_val],
+            ticktext=[str(max_val), str(max_val/2), "0", str(max_val/2), str(max_val)],
+            zeroline=True
+        ),
+        yaxis=dict(title="", autorange='reversed'),
+        template="plotly_white",
+        bargap=0.5
+    )
+
+    return fig

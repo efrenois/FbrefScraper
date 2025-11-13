@@ -2,4 +2,5 @@ beautifulsoup4==4.14.2
 cloudscraper==1.2.71
 Jinja2==3.1.6
 pandas==2.3.3
+plotly==6.4.0
 streamlit==1.51.0
