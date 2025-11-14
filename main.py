@@ -74,7 +74,7 @@ def main():
             save_season_stats_to_csv(stats, player_name=name, season=season_args, comp=comp_args)
             sys.exit(0) 
             
-    elif len(names) >= 2:
+    elif len(names) == 2:
         player_stats_list = []
 
         for name in names:
@@ -102,10 +102,12 @@ def main():
         fig = compare_players_chart(player_stats_list, season=season_args, comp=comp_args)
         fig.show()
         
+    elif len(names) > 2:
+        print("⚠️ Comparison of more than two players is not supported.")
+        sys.exit(0)
     else:
         print("⚠️ No results found on FBref.")
-        sys.exit(0)
-        
+        sys.exit(0) 
 if __name__ == "__main__":
     main()
 

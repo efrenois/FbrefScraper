@@ -601,11 +601,21 @@ def compare_players_chart(stats_list, season, comp):
         )   
     ))
 
+    # Title with season and competition
+    if season == "All" or "all": 
+        season == "all seasons"
+    else:
+        season = season
+    if comp == "all":
+        comp = "all competitions"
+    else: 
+        comp = comp
+        
     # Layout with names in the middle
     max_val = max(df_to_plot.max())  # largest value for scaling
     fig.update_layout(
         title=dict(
-            text=f"Player Comparison (Season: {season}, Competition: {comp})",
+            text=f"Player Comparison for {season}, {comp}",
             x=0.5,           
             xanchor='center', 
             yanchor='top',    
