@@ -33,12 +33,13 @@ div[data-testid="stForm"] button:hover {
 </style>
 """, unsafe_allow_html=True)
 
-st.title("⚽ FBref Scraper — Player analysis")
+st.title("⚽ Welcome on FBref Scraper !")
+st.write("")
 
-tab_passport, tab_single_player_analysis, tab_compare = st.tabs(["Passport Player", "Single Player Analysis", "Compare Players"])
+tab_passport, tab_single_player_analysis, tab_compare = st.tabs(["Passport Player", "Single Player Analysis", "Player Comparison"])
 
 with tab_passport:
-    st.header("🪪 Player Passport")
+    st.header("Player Passport")
 
     # Form
     with st.form("passport_form"):
@@ -77,7 +78,7 @@ with tab_passport:
             st.components.v1.html(passport_html, height=600, scrolling=True)
 
 with tab_single_player_analysis:
-    st.header("📊 Single Player Analysis")
+    st.header("Single Player Analysis")
     with st.form("analysis_form"):
         name_single = st.text_input("Player name", placeholder="Ex: Lamine Yamal")
         season_single = st.text_input("Season", placeholder="(ex: YYYY-YYYY or YYYY or 'All' )")
@@ -164,9 +165,9 @@ with tab_single_player_analysis:
                     )
             
 with tab_compare:
-    st.header("🥊 Compare Players")
+    st.header("Player Comparison")
     with st.form("compare_form"):
-        players_names = st.text_area("Player names", 
+        players_names = st.text_input("Player names", 
                                      placeholder="Ex: Lamine Yamal, Nico Williams", help="Enter two player names separated by commas.")
         season_compare = st.text_input("Season", placeholder="(ex: YYYY-YYYY or YYYY or 'All' )")
         comp_compare = st.selectbox(
