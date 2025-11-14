@@ -14,86 +14,115 @@ comp_map = {
 
 st.set_page_config(page_title="FBref Scraper", page_icon="⚽", layout="wide")
 
+# Custom CSS for buttons in forms
+st.markdown("""
+<style>
+/* Style global pour tous les boutons de formulaire */
+div[data-testid="stForm"] button {
+    border: 2px solid #FF7F50 !important;  /* contour orange */
+    background-color: transparent !important; 
+    color: inherit !important;              /* conserve la couleur du texte */
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+}
+
+/* Fond orange foncé au survol */
+div[data-testid="stForm"] button:hover {
+    background-color: #FF4500 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 st.title("⚽ FBref Scraper — Player analysis")
 
-tab1, tab2 = st.tabs(["Single Player Analysis", "Compare Players"])
+tab_passport, tab_single_player_analysis, tab_compare = st.tabs(["Passport Player", "Single Player Analysis", "Compare Players"])
 
-with tab1:
-    st.header("🔍 Single Player Analysis")
+with tab_passport:
+    st.header("🪪 Player Passport")
 
     # Form
-    with st.form("scraper_form"):
-        name = st.text_input("Player name", placeholder="Ex: Lamine Yamal")
-        season = st.text_input("Season", placeholder="(ex: YYYY-YYYY or YYYY or 'All' )")
-        comp = st.selectbox(
+    with st.form("passport_form"):
+        name_passport = st.text_input("Player name", placeholder="Ex: Lamine Yamal")
+        st.write("")
+        col_left, col_button = st.columns([7, 1])
+        with col_button:
+            submitted_passport = st.form_submit_button("Generate Passport")
+        
+        if submitted_passport:
+            if not name_passport.strip(): 
+                st.warning("⚠️ Please enter a player name.")
+                st.stop()
+        
+            # Player search
+            with st.spinner(f"Search for player {name_passport} on FBref..."):
+                try:
+                    results = fbref_search(name_passport)
+                except Exception as e:
+                    st.error(f"Error during search : {e}")
+                    st.stop()
+
+            if not results.get("players"):
+                st.error("⚠️ No player found on FBref")
+                st.stop()
+
+            # Player page found
+            _, chosen = results["players"][0]
+            st.success(f"✅ Player found : {name_passport}")
+            
+            with st.spinner("📄 Extracting player information..."):
+                code, html = fetch_page(chosen)
+                player_info = extract_player_info(html, chosen, name_passport)
+                passport_html, passport_path = generate_player_passeport(player_info)
+
+            st.components.v1.html(passport_html, height=600, scrolling=True)
+
+with tab_single_player_analysis:
+    st.header("📊 Single Player Analysis")
+    with st.form("analysis_form"):
+        name_single = st.text_input("Player name", placeholder="Ex: Lamine Yamal")
+        season_single = st.text_input("Season", placeholder="(ex: YYYY-YYYY or YYYY or 'All' )")
+        comp_single = st.selectbox(
             "Competition",
             ["Select a competition...","all competitions", "domestic leagues", "domestic cups",
              "international cups", "national team"],
             index=0
         )
-        submitted = st.form_submit_button("🚀 Launch the Scraper")
+        st.write("")
+        col_left, col_button = st.columns([13.5, 1])
+        with col_button:
+            submitted_single = st.form_submit_button("Submit")
 
-    if submitted:
-        if not name.strip():
+    if submitted_single:
+        if not name_single.strip():
             st.warning("⚠️ Please enter a player name.")
             st.stop()
-        if season.strip() == "":
+        if season_single.strip() == "":
             st.warning("⚠️ Please enter a season.")
             st.stop()
-        if comp == "Sélectionnez une compétition...":
+        if comp_single == "Sélectionnez une compétition...":
             st.warning("⚠️ Please select a competition.")
             st.stop()
 
-        # Player search
-        with st.spinner(f"Search for player {name} on FBref..."):
+        with st.spinner("📊 Data extraction..."):
             try:
-                results = fbref_search(name)
+                results = fbref_search(name_single)
+                _, chosen = results["players"][0]
+                comp_key = comp_map[comp_single]
+                comp_url, table_id = get_competition_url_and_table_id(chosen, comp_key)
+                code_comp, html_comp = fetch_page(comp_url)
+                stats = extract_player_stats_by_competition(
+                    html_comp,
+                    table_id,
+                    season=None if season_single.lower() == "all" else season_single
+                )
             except Exception as e:
-                st.error(f"Error during search : {e}")
+                st.error(f"Error extracting statistics : {e}")
                 st.stop()
 
-        if not results.get("players"):
-            st.error("Aucun joueur trouvé sur FBref.")
-            st.stop()
-
-        # Player page found
-        _, chosen = results["players"][0]
-        st.success(f"✅ Player found : {name}")
-
-        # Navigation tabs
-        passport_tab, stats_tab = st.tabs(["🪪 Player Passport", "📊 Player Statistics"])
-
-        # Player passport
-        with passport_tab:
-            with st.spinner("📄 Extracting player information..."):
-                code, html = fetch_page(chosen)
-                player_info = extract_player_info(html, chosen, name)
-                passport_html, passport_path = generate_player_passeport(player_info)
-
-            st.subheader("🪪 Player passport")
-            st.components.v1.html(passport_html, height=600, scrolling=True)
-
-        # Player statistics
-        with stats_tab:
-            with st.spinner("📊 Data extraction..."):
-                try:
-                    comp_key = comp_map[comp]
-                    comp_url, table_id = get_competition_url_and_table_id(chosen, comp_key)
-                    code_comp, html_comp = fetch_page(comp_url)
-                    stats = extract_player_stats_by_competition(
-                        html_comp,
-                        table_id,
-                        season=None if season.lower() == "all" else season
-                    )
-                except Exception as e:
-                    st.error(f"Error extracting statistics : {e}")
-                    st.stop()
-
             # Save CSV
-            csv_path = save_season_stats_to_csv(stats, player_name=name, season=season, comp=comp)
+            csv_path = save_season_stats_to_csv(stats, player_name=name_single, season=season_single, comp=comp_single)
 
             st.subheader("📊 Data table")
-
             if not stats or "message" in stats:
                 st.warning("No data available for this selection.")
             else:
@@ -134,8 +163,8 @@ with tab1:
                         mime="text/csv"
                     )
             
-with tab2:
-    st.header("⚔️ Compare Players")
+with tab_compare:
+    st.header("🥊 Compare Players")
     with st.form("compare_form"):
         players_names = st.text_area("Player names", 
                                      placeholder="Ex: Lamine Yamal, Nico Williams", help="Enter two player names separated by commas.")
@@ -146,7 +175,10 @@ with tab2:
              "international cups", "national team"],
             index=0
         )
-        compare_submitted = st.form_submit_button("🚀 Compare Players")
+        st.write("")
+        col_left, col_button = st.columns([13.5, 1])
+        with col_button:
+            compare_submitted = st.form_submit_button("Submit")
         
     if compare_submitted:
         player_list = [p.strip() for p in players_names.split(",") if p.strip()]
