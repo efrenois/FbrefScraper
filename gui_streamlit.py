@@ -218,3 +218,26 @@ with tab_compare:
             st.subheader("📊 Player Comparison")
             fig = compare_players_chart(all_stats, season_compare, comp_compare)
             st.plotly_chart(fig, use_container_width=True)
+
+# Footer
+st.markdown(
+    """
+    <style>
+    .footer {
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        color: gray;
+        text-align: center;
+        font-size: 12px;
+        padding: 10px 0;
+        z-index: 0;
+    }
+    </style>
+
+    <div class="footer">
+        © 2025 FBref Scraper. All rights reserved.
+    </div>
+    """,
+    unsafe_allow_html=True
+)
