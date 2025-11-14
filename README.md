@@ -75,8 +75,9 @@ Lancez l'interface Streamlit avec la commande suivante :
 streamlit run gui_streamlit.py
 ```
 Cela ouvrira une interface web où vous pourrez jouer avec les fonctionnalités du scraper de manière interactive.
+<img width="1582" height="973" alt="Capture d’écran 2025-11-14 à 16 06 28" src="https://github.com/user-attachments/assets/2ec6bbd1-17ac-49ef-a2f2-884093412aee" />
 
-## Options de ligne de commande
+## Options de la ligne de commande
 
 - `player_name` : Nom du joueur dont vous souhaitez récupérer les informations (obligatoire).
 - `--season` : Saison du joueur à analyser (exemple : `2014-2015`). Utilisez `all` ou `All` pour toutes les saisons.
