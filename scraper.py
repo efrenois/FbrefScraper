@@ -266,6 +266,33 @@ def extract_player_info(html, base_url, name):
                     if info.get("full_name") in (None, "", "inconnu"):
                         info["full_name"] = part.strip()
                     continue
+            
+            # If full_name still not found, try detecting the first meaningful text block
+            if info.get("full_name") in (None, "", "inconnu"):
+
+                forbidden_keywords = {
+                    "position", "born", "footed", "national team",
+                    "club", "wages", "height", "weight"
+                }
+
+                football_positions = {
+                    "defender", "midfielder", "forward", "goalkeeper",
+                    "centre-back", "center-back", "winger", "striker",
+                    "attacking", "defensive"
+                }
+
+                # Conditions for potential name
+                is_potential_name = (
+                    len(part.split()) >= 2
+                    and not any(key in part_norm for key in forbidden_keywords)
+                    and not any(pos in part_norm for pos in football_positions)
+                    and not re.search(r"\d", part)
+                    and ":" not in part
+                )
+
+                if is_potential_name:
+                    info["full_name"] = part.strip()
+                    continue
 
             # Position
             m = re.search(r"Position\s*: ?(.+)", part, flags=re.I)
