@@ -585,7 +585,6 @@ def compare_players_chart(stats_list, season, comp):
         "expected_npxg+xag": "Non-penalty Expected Goals + Expected Assisted Goals",
     }
 
-    # On mappe les noms de colonnes du DataFrame aux labels lisibles
     display_labels = [stat_meaning.get(stat, stat) for stat in common_stats]
     
     # Build interactive figure
@@ -618,7 +617,7 @@ def compare_players_chart(stats_list, season, comp):
         orientation='h',
         name=player2,
         marker_color="crimson",
-        text=None,  # aucune valeur affichée directement sur la barre
+        text=None,
         hovertemplate="<br>%{x}<br><extra></extra>",
         hoverlabel=dict(
             align="left",       
@@ -639,7 +638,7 @@ def compare_players_chart(stats_list, season, comp):
         comp = comp
         
     # Layout with names in the middle
-    max_val = max(df_to_plot.max())  # largest value for scaling
+    max_val = max(df_to_plot.max())  
     fig.update_layout(
         title=dict(
             text=f"Player Comparison for {season}, {comp}",
