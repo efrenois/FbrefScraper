@@ -92,12 +92,12 @@ Cela ouvrira une interface web où vous pourrez jouer avec les fonctionnalités 
 ```bash
 FbrefScrapper/
 ├── main.py                         # Script principal pour exécuter le scraper
-├── output                          # Dossier de sortie pour les passeports et données
+├── output/                          # Dossier de sortie pour les passeports et données générées
 ├── README.md                       # Documentation du projet 
 ├── requirements.txt                # Fichier des dépendances Python
 ├── scraper.py                      # Module principal du scraper  
 ├── gui_streamlit.py                # Interface utilisateur Streamlit
-├── templates                       # Modèles HTML pour le passeport joueur    
+├── templates/                       # Modèles HTML pour le passeport joueur    
 │   └── passport_template.html
 ```
 ## Limitation
