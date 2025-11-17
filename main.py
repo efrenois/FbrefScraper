@@ -3,6 +3,7 @@ import argparse
 from scraper import *
 
 def main():
+    
     parser = argparse.ArgumentParser(description="Scraper FBref ")
     parser.add_argument("player_name", type=str, nargs="+", help="Name of the player whose information you want")
     parser.add_argument("--comp", type=str, default=None, choices=["all", "dl", "dc", "ic", "nt"], 
