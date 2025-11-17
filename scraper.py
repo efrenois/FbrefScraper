@@ -2,7 +2,6 @@ import time
 import re
 import cloudscraper
 import unicodedata
-import unicodedata
 import sys
 import os 
 import csv
