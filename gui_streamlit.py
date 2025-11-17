@@ -17,16 +17,14 @@ st.set_page_config(page_title="FBref Scraper", page_icon="⚽", layout="wide")
 # Custom CSS for buttons in forms
 st.markdown("""
 <style>
-/* Style global pour tous les boutons de formulaire */
 div[data-testid="stForm"] button {
-    border: 2px solid #FF7F50 !important;  /* contour orange */
+    border: 2px solid #FF7F50 !important;  
     background-color: transparent !important; 
-    color: inherit !important;              /* conserve la couleur du texte */
+    color: inherit !important;            
     transition: background-color 0.3s ease;
     cursor: pointer;
 }
 
-/* Fond orange foncé au survol */
 div[data-testid="stForm"] button:hover {
     background-color: #FF4500 !important;
 }
