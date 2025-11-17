@@ -217,7 +217,7 @@ def extract_player_info(html, base_url, name):
         info["name"] = h1.get_text(strip=True)
     else:
         # Use the name passed as a parameter if the page does not contain the expected h1
-        info["name"] = "Nom inconnu"
+        info["name"] = "Name not found"
     # Normalized for comparisons below
     search_norm = normalize_text(info["name"])
 
@@ -238,13 +238,13 @@ def extract_player_info(html, base_url, name):
             # Initialize default values once
             if not info.get("_meta_inited"):
                 defaults = {
-                    "full_name": "inconnu",
-                    "position": "inconnu",
-                    "footed": "inconnu",
-                    "birth": "inconnu",
-                    "national_team": "inconnu",
-                    "club": "inconnu",
-                    "wages": "inconnu",
+                    "full_name": "Unknown",
+                    "position": "Unknown",
+                    "footed": "Unknown",
+                    "birth": "Unknown",
+                    "national_team": "Unknown",
+                    "club": "Unknown",
+                    "wages": "Unknown",
                 }
                 for k, v in defaults.items():
                     info.setdefault(k, v)
@@ -263,12 +263,12 @@ def extract_player_info(html, base_url, name):
 
                 # Accept if one of the criteria is met
                 if token_match or similar or part_norm.startswith(search_norm):
-                    if info.get("full_name") in (None, "", "inconnu"):
+                    if info.get("full_name") in (None, "", "Unknown"):
                         info["full_name"] = part.strip()
                     continue
             
             # If full_name still not found, try detecting the first meaningful text block
-            if info.get("full_name") in (None, "", "inconnu"):
+            if info.get("full_name") in (None, "", "Unknown"):
 
                 forbidden_keywords = {
                     "position", "born", "footed", "national team",
@@ -332,7 +332,7 @@ def extract_player_info(html, base_url, name):
                 dot = val.find('.')
                 if dot != -1:
                     val = val[:dot+1].strip()
-                info["wages"] = val or "inconnu"
+                info["wages"] = val or "Unknown"
                 continue
 
     # Photo of the player 
