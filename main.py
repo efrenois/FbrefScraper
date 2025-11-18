@@ -115,7 +115,7 @@ def main():
             sys.exit(0)
 
         print("\n📊 Generation of the comparative graph...")
-        fig = compare_players_chart(player_stats_list, season_args, comp_args, type=types_args)   
+        fig = compare_players_chart(player_stats_list, season_args, comp_args, types_args)   
         if fig is None:
             print("⚠️ Comparison could not be generated due to lack of common statistics.")
             sys.exit(0)  

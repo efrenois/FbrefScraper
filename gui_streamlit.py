@@ -255,12 +255,12 @@ with tab_compare:
         # Affichage graphique
         if len(all_stats) >= 2:
             st.subheader("📊 Player Comparison")
-            fig = compare_players_chart(all_stats, season_compare, comp_compare)
+            fig = compare_players_chart(all_stats, season_compare, comp_compare, type_key)
             if fig is None:
                 st.warning("⚠️ No common statistics to compare between the players.")
                 st.stop()
             else:
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig)
 
 # Footer
 st.markdown(

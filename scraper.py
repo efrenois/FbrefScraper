@@ -722,6 +722,8 @@ def compare_players_chart(stats_list, season, comp, type="standard"):
     # Remove unwanted columns
     df = df.drop(columns=[col for col in current_exclusions if col in df.columns], errors="ignore")
     
+    print(df.columns.tolist())
+    
     # Replace commas (e.g. '1,234' -> '1234')
     df = df.replace({r",": ""}, regex=True)
     df = df.apply(pd.to_numeric, errors="coerce")
