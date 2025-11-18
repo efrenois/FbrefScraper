@@ -52,22 +52,17 @@ Ouvrez le fichier HTML dans votre navigateur pour visualiser le passeport de Ney
 Voici un exemple du HTML généré: 
 <img width="1582" height="973" alt="ex_HTML_Neymar" src="https://github.com/user-attachments/assets/b2d84116-2830-467f-8866-847795a6543d" />
 
-2. Extraire les statistiques de Neymar Jr sur la saison 2014-2015 en Ligue des champions:
+2. Extraire les statistiques de tirs de Neymar Jr sur la saison 2014-2015 en Ligue des champions:
 ```bash
-python main.py 'Neymar' --season '2014-2015' --comp 'ic'
+python main.py 'Neymar' --season '2014-2015' --comp 'ic' --type 'shooting'
 ```
 Cette commande extrait les statistiques de Neymar Jr pour la saison 2014-2015 en Ligue des champions et les enregistre au format CSV dans le dossier `output/datas_player`.
 
-<img width="1116" height="691" alt="Capture d’écran 2025-11-12 à 14 51 05" src="https://github.com/user-attachments/assets/85007173-14c9-4e89-b110-b7790cd9bf57" />
-
-
-3. Comparer les statistiques de Neymar Jr et Kylian Mbappé sur la saison 2022-2023 en Ligue 1:
+3. Comparer les statistiques standards de Neymar Jr et Kylian Mbappé sur la saison 2022-2023 en Ligue 1:
 ```bash
-python main.py 'Neymar' 'Kylian Mbappé' --season '2022-2023' --comp 'dl'
+python main.py 'Neymar' 'Kylian Mbappé' --season '2022-2023' --comp 'dl' --type 'standard'
 ```
 Cette commande compare les performances de Neymar Jr et Kylian Mbappé pour la saison 2022-2023 en Ligue 1 et affiche un graphique comparatif.
-<img width="1582" height="973" alt="Capture d’écran 2025-11-13 à 16 29 52" src="https://github.com/user-attachments/assets/8344a1b9-27ac-4b5a-8ad5-f06f1704a2ba" />
-
 
 ### Interface graphique Streamlit
 Lancez l'interface Streamlit avec la commande suivante :
@@ -87,6 +82,13 @@ Cela ouvrira une interface web où vous pourrez jouer avec les fonctionnalités 
     - `dc` : Coupes domestiques.
     - `ic` : Coupes internationales.
     - `nt` : Équipe nationale.
+- `--type` : Type de statistiques à extraire. Options disponibles :
+    - `standard` : Statistiques standard.
+    - `shooting` : Statistiques de tir.
+    - `passing` : Statistiques de passe.
+    - `pass_types` : Types de passes.
+    - `da` : Actions défensives.
+    - `g&s` : Création de buts et tirs. 
 
 ## Structure du projet
 ```bash
