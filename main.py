@@ -88,14 +88,20 @@ def main():
         for name in names:
             name = name.strip()
             print(f"⚙️ Extraction for {name}...")
-            results = fbref_search(name)
-            if not results.get("players"):
-                print(f"⚠️ No results found for {name}")
-                continue
-
+            try:
+                results = fbref_search(name)
+                if not results.get("players"):
+                    print(f"⚠️ No results found for {name}")
+                    continue
+            except ValueError as ve:
+                print(f"❌ Search declined for {name} :", ve)
+                sys.exit(2)
+            except Exception as e:
+                print(f"❌ Error during search for {name} :", e)
+                sys.exit(2)
+            
             _, chosen = results["players"][0]
             comp_url, _ = get_competition_url_and_table_id(chosen, comp=comp_args)
-            # Determine table ID from --type
             table_id = get_table_id_for_type(types_args, comp_args)
             _, html_comp = fetch_page(comp_url)
             season_param = season_args
@@ -109,7 +115,10 @@ def main():
             sys.exit(0)
 
         print("\n📊 Generation of the comparative graph...")
-        fig = compare_players_chart(player_stats_list, season_args, comp_args, type=types_args)     
+        fig = compare_players_chart(player_stats_list, season_args, comp_args, type=types_args)   
+        if fig is None:
+            print("⚠️ Comparison could not be generated due to lack of common statistics.")
+            sys.exit(0)  
         fig.show()
         
     elif len(names) > 2:
@@ -118,6 +127,7 @@ def main():
     else:
         print("⚠️ No results found on FBref.")
         sys.exit(0) 
+        
 if __name__ == "__main__":
     main()
 

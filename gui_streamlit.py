@@ -12,6 +12,16 @@ comp_map = {
     "national team": "nt"
     }
 
+# Type of statistics mapping
+type_map = {
+    "standard statistics": "standard", 
+    "shooting statistics": "shooting",
+    "passing statistics": "passing",
+    "pass types statistics": "pass_types",
+    "defense actions statistics": "da",
+    "goal & shot creation statistics": "g&s"
+}
+
 st.set_page_config(page_title="FBref Scraper", page_icon="⚽", layout="wide")
 
 # Custom CSS for buttons in forms
@@ -88,7 +98,8 @@ with tab_single_player_analysis:
         )
         stats_type_single = st.selectbox(
         "Type of Statistics",
-        ["Select a type of statistics...", "standard", "shooting", "passing", "pass_types", "da", "g&s"],
+        ["Select a type of statistics...", "standard statistics", "shooting statistics", "passing statistics",
+         "pass types statistics", "defense actions statistics", "goal & shot creation statistics"],
         index=0,
         help="Select which type of statistics to extract"
         )
@@ -118,15 +129,9 @@ with tab_single_player_analysis:
                 results = fbref_search(name_single)
                 _, chosen = results["players"][0]
                 comp_key = comp_map[comp_single]
-                type_table_map = {
-                    "standard": "stats_standard_collapsed",
-                    "shooting": "stats_shooting",
-                    "passing": "stats_passing",
-                    "pass_types": "stats_pass_types",
-                    "da": "stats_defense",
-                    "g&s": "stats_gca"
-                }
-                table_id = get_table_id_for_type(stats_type_single, comp_key)
+                type_key = type_map[stats_type_single]
+
+                table_id = get_table_id_for_type(type_key, comp_key)
                 comp_url, _ = get_competition_url_and_table_id(chosen, comp_key)
                 code_comp, html_comp = fetch_page(comp_url)
                 stats = extract_player_stats_by_competition(
@@ -139,7 +144,7 @@ with tab_single_player_analysis:
                 st.stop()
 
             # Save CSV
-            csv_path = save_season_stats_to_csv(stats, player_name=name_single, season=season_single, comp=comp_single, type=stats_type_single)
+            csv_path = save_season_stats_to_csv(stats, player_name=name_single, season=season_single, comp=comp_single, type=type_key)
 
             st.subheader("📊 Data table")
             if not stats or "message" in stats:
@@ -196,7 +201,8 @@ with tab_compare:
         )
         stats_type_compare = st.selectbox(
         "Type of Statistics",
-        [ "Select a type of statistics...","standard", "shooting", "passing", "pass_types", "da", "g&s"],
+        [ "Select a type of statistics...", "standard statistics", "shooting statistics", "passing statistics",
+         "pass types statistics", "defense actions statistics", "goal & shot creation statistics"],
         index=0,
         help="Select which type of statistics to extract"
         )
@@ -230,10 +236,11 @@ with tab_compare:
                     results = fbref_search(name)
                     _, chosen = results["players"][0]
                     comp_key = comp_map[comp_compare]
-                    comp_url, table_id = get_competition_url_and_table_id(chosen, comp_key)
+                    type_key = type_map[stats_type_compare]
+                    comp_url, _ = get_competition_url_and_table_id(chosen, comp_key)
                     code_comp, html_comp = fetch_page(comp_url)
 
-                    table_id = get_table_id_for_type(stats_type_compare, comp_key)
+                    table_id = get_table_id_for_type(type_key, comp_key)
 
                     stats = extract_player_stats_by_competition(
                         html_comp, table_id, season=season_compare
@@ -249,7 +256,11 @@ with tab_compare:
         if len(all_stats) >= 2:
             st.subheader("📊 Player Comparison")
             fig = compare_players_chart(all_stats, season_compare, comp_compare)
-            st.plotly_chart(fig, use_container_width=True)
+            if fig is None:
+                st.warning("⚠️ No common statistics to compare between the players.")
+                st.stop()
+            else:
+                st.plotly_chart(fig, use_container_width=True)
 
 # Footer
 st.markdown(

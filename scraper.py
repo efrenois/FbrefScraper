@@ -620,13 +620,102 @@ def compare_players_chart(stats_list, season, comp, type="standard"):
                     "expected_npxg_sh", "expected_g_xg", "expected_np:g_xg"
                     ],
         "passing": ["_age", "_squad", "_country", "_comp", "_lgrank", "_ast", "_kp",
-                    "_1_3", "_ppa", "_crspa", "_prgp", "_matches", "total_90s", "total_totdist", "total_prgdist"
+                    "_1_3", "_ppa", "_crspa", "_prgp", "_matches", "total_90s", "total_totdist", "total_prgdist",
+                    "expected_xa", "expected_a_xag"
                     ],
         "pass_types": [ "_age", "_squad", "_country", "_comp", "_lgrank", "_90s", "_matches"],
         "da": ["_age", "_squad", "_country", "_comp", "_lgrank", "_matches", "_err"],
         "g&s": ["_age", "_squad", "_country", "_comp", "_lgrank", "_matches"],
     }
 
+    # Stats meaning 
+    stat_meaning = {
+    "playing_time_mp": "Matches Played",
+    "playing_time_starts": "Games started by player",
+    "performance_gls": "Goals",
+    "performance_ast": "Assists",
+    "performance_g+a": "Goals + Assists",
+    "performance_g-pk": "Non-penalty Goals",
+    "performance_pk": "Penalty Kicks Made",
+    "performance_pkatt": "Penalty Kicks Attempted",
+    "performance_crdy": "Yellow Cards",
+    "performance_crdr": "Red Cards",
+    "expected_xg": "Expected Goals",
+    "expected_npxg": "Non-penalty Expected Goals",
+    "expected_xag": "Expected Assisted Goals",
+    "expected_npxg+xag": "Non-penalty Expected Goals + Expected Assisted Goals",
+    "standard_gls": "Goals",
+    "standard_sh": "Shots Total",
+    "standard_sot": "Shots on Target",
+    "standard_sot%": "Shots on Target %",
+    "standard_fk": "Shots from Free Kicks",
+    "standard_pk": "Penalty Kicks Made",
+    "standard_pkatt": "Penalty Kicks Attempted",
+    "expected_xg": "Expected Goals",
+    "expected_npxg": "Non-penalty Expected Goals",
+    "_xag": "Expected Assisted Goals",
+    "total_cmp": "Passes Completed",
+    "total_att": "Passes Attempted",
+    "total_cmp%": "Pass Completion %",
+    "short_cmp": "Short Passes Completed",
+    "short_att": "Short Passes Attempted",
+    "short_cmp%": "Short Pass Completion %",
+    "medium_cmp": "Medium Passes Completed",
+    "medium_att": "Medium Passes Attempted",
+    "medium_cmp%": "Medium Pass Completion %",
+    "long_cmp": "Long Passes Completed",
+    "long_att": "Long Passes Attempted",
+    "long_cmp%": "Long Pass Completion %",
+    "pass_types_att": "Passes Attempted",
+    "pass_types_live": "Live Ball-Passes",
+    "pass_types_dead": "Dead Ball-Passes",
+    "pass_types_fk": "Passes from Free Kick Passes",
+    "pass_types_tb": "Through Balls",
+    "pass_types_sw": "Switches",
+    "pass_types_crs": "Crosses",
+    "pass_types_ti": "Throw Ins Taken",
+    "pass_types_ck": "Corner Kicks",
+    "corner_kicks_in": "Inswinging Corner Kicks",
+    "corner_kicks_out": "Outswinging Corner Kicks",
+    "corner_kicks_str": "Straight Corner Kicks",
+    "outcomes_cmp": "Passes Completed",
+    "outcomes_off": "Passes Offsides",
+    "outcomes_blocks": "Passes Blocked",
+    "_int": "Interceptions",
+    '_tkl+int': "Tackles + Interceptions",
+    '_clr': "Clearances",
+    'tackles_90': "90s played",
+    "tackles_tkl": "Tackles",
+    "tackles_tklw": "Tackles Won",
+    "tackles_def_3rd": "Defensive 3rd Tackles",
+    "tackles_mid_3rd": "Middle 3rd Tackles",
+    "tackles_att_3rd": "Attacking 3rd Tackles",
+    "challenges_tkl": "Dribblers Tackled",
+    "challenges_att": "dribbles Challenged",
+    "challenges_tkl%":  "% of Dribblers Tackled",
+    "challenges_lost": "Challenges Lost",
+    "blocks_blocks": "Ball Blocked",
+    "blocks_sh": "Shots Blocked",
+    "blocks_pass": "Passes Blocked",
+    "sca_90s": "90s played",
+    "sca_sca": "Shot-Creating Actions",
+    "sca_sca90": "Shot-Creating Actions per 90",
+    "sca_types_passlive": "Shot-Creating Actions from Live Ball Passes",
+    "sca_types_passdead": "Shot-Creating Actions from Dead Ball Passes",
+    "sca_types_to": "SCA (Take Ons)",
+    "sca_types_sh" : "SCA (Shots)",
+    "sca_types_fld": "SCA (Fouled)",
+    "sca_types_def": "SCA (Defensive Actions)",
+    "gca_gca": "Goal-Creating Actions",
+    "gca_gca90": "Goal-Creating Actions per 90",
+    "gca_types_passlive": "Goal-Creating Actions from Live Ball Passes",
+    "gca_types_passdead": "Goal-Creating Actions from Dead Ball Passes",
+    "gca_types_to": "GCA (Take Ons)",
+    "gca_types_sh": "GCA (Shots)",
+    "gca_types_fld": "GCA (Fouled)",
+    "gca_types_def": "GCA (Defensive Actions)",
+    }
+    
     # Identify stats to delete
     current_exclusions = excluded_stats.get(type, [])
 
@@ -644,14 +733,14 @@ def compare_players_chart(stats_list, season, comp, type="standard"):
     common_stats = [col for col in df.columns if not df[col].isna().any()]
     if not common_stats:
         print("⚠️ No common statistics between players.")
-        return
+        return None
 
     df_to_plot = df[common_stats]
     player1, player2 = df_to_plot.index.tolist()
 
     # Labels 
-    display_labels = [col.replace("_", " ").title() for col in common_stats]
-
+    display_labels = [stat_meaning.get(stat, stat) for stat in common_stats]
+    
     # Plot building 
     fig = go.Figure()
 
@@ -680,7 +769,7 @@ def compare_players_chart(stats_list, season, comp, type="standard"):
         orientation='h',
         name=player2,
         marker_color="crimson",
-        hovertemplate="<b>%{y}</b><br>%{x}<extra></extra>"
+        hovertemplate="<br>%{x}<extra></extra>"
     ))
 
     # Title formatting 
