@@ -57,6 +57,7 @@ Voici un exemple du HTML généré:
 python main.py 'Neymar' --season '2017-2018' --comp 'ic' --type 'shooting'
 ```
 Cette commande extrait les statistiques de Neymar Jr pour la saison 2017-2018 en Ligue des champions et les enregistre au format CSV dans le dossier `output/datas_player`.
+<img width="1036" height="516" alt="Capture d’écran 2025-11-18 à 16 14 35" src="https://github.com/user-attachments/assets/61b8a0cc-d933-48cd-960c-eebf431f7fe2" />
 
 
 3. Comparer les statistiques standards de Neymar Jr et Kylian Mbappé sur la saison 2022-2023 en Ligue 1:
@@ -64,6 +65,8 @@ Cette commande extrait les statistiques de Neymar Jr pour la saison 2017-2018 en
 python main.py 'Neymar' 'Kylian Mbappé' --season '2022-2023' --comp 'dl' --type 'standard'
 ```
 Cette commande compare les performances de Neymar Jr et Kylian Mbappé pour la saison 2022-2023 en Ligue 1 et affiche un graphique comparatif.
+<img width="1582" height="973" alt="Capture d’écran 2025-11-18 à 16 17 57" src="https://github.com/user-attachments/assets/5b9548a0-16c7-4e86-a1f8-3b9711563f16" />
+
 
 ### Interface graphique Streamlit
 Lancez l'interface Streamlit avec la commande suivante :
