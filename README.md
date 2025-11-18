@@ -99,8 +99,8 @@ FbrefScrapper/
 ├── requirements.txt                # Fichier des dépendances Python
 ├── scraper.py                      # Module principal du scraper  
 ├── gui_streamlit.py                # Interface utilisateur Streamlit
-├── templates/                      # Modèles HTML pour le passeport joueur    
-│   └── passport_template.html
+├── templates/                      # Dossier des modèles HTML
+│   └── passport_template.html      # Modèles HTML pour le passeport joueur 
 ```
 ## Limitation
 •	Dépend du format des pages FBref. Les changements sur le site peuvent casser le scraper.
