@@ -8,18 +8,21 @@ def main():
     parser.add_argument("player_name", type=str, nargs="+", help="Name of the player whose information you want")
     parser.add_argument("--comp", type=str, default=None, choices=["all", "dl", "dc", "ic", "nt"], 
                         help="Competitions : all (all competitions), dl (domestic leagues), dc (domestic cups), ic (international cups), nt (national team)")
-    parser.add_argument("--season", type=str, default= None, help="Player season to be analyzed (e.g., '2014-2015'). Use 'all' for all seasons.")
+    parser.add_argument("--season", type=str, default=None, help="Player season to be analyzed (e.g., '2014-2015'). Use 'all' for all seasons.")
+    parser.add_argument("--type", type=str, default=None, choices=["standard", "shooting", "passing", "pass_types", "da", "g&s"], help="Type of statistics to extract"
+)
     args = parser.parse_args()
     
 
     names = args.player_name
     season_args = args.season
     comp_args = args.comp 
+    types_args = args.type
     
     # Check of argument consistency
-    if (season_args and not comp_args) or (comp_args and not season_args):
-        print("⚠️ If you use the --season parameter, you must specify a value for the --comp parameter, and vice versa.")
-        print("Example of a valid command: python3 main.py 'Lionel Messi' --season '2014-2015' --comp 'dl'")
+    if (season_args and not (comp_args and types_args)) or (comp_args and not (season_args and types_args)) or (types_args and not (season_args and comp_args)):
+        print("⚠️ If you use the --season parameter, you must specify a value for the --comp and the --type parameters , and vice versa.")
+        print("Example of a valid command: python3 main.py 'Lionel Messi' --season '2014-2015' --comp 'dl' --type 'standard'")
         sys.exit(1)
 
     print(f"🔍 Searching for : {names}")
@@ -54,8 +57,12 @@ def main():
             player_url = chosen
             try:
                 # Generate the URL and ID of the HTML table according to the selected competition.
-                comp_url, table_id = get_competition_url_and_table_id(player_url, comp=comp_args)
+                comp_url, _ = get_competition_url_and_table_id(player_url, comp=comp_args)
                 print(f"✅ URL found : {comp_url}")
+                
+                # Determine which table ID to extract (standard, shooting, passing, etc.)
+                table_id = get_table_id_for_type(types_args, comp_args)
+            
 
             except Exception as e:
                 print("❌ Error generating URL  :", e)
@@ -72,7 +79,7 @@ def main():
             stats = extract_player_stats_by_competition(html_comp, table_id, season=season_param)
 
             # Save as CSV
-            save_season_stats_to_csv(stats, player_name=name, season=season_args, comp=comp_args)
+            save_season_stats_to_csv(stats, player_name=name, season=season_args, comp=comp_args, type=types_args)
             sys.exit(0) 
             
     elif len(names) == 2:
@@ -87,7 +94,9 @@ def main():
                 continue
 
             _, chosen = results["players"][0]
-            comp_url, table_id = get_competition_url_and_table_id(chosen, comp=comp_args)
+            comp_url, _ = get_competition_url_and_table_id(chosen, comp=comp_args)
+            # Determine table ID from --type
+            table_id = get_table_id_for_type(types_args, comp_args)
             _, html_comp = fetch_page(comp_url)
             season_param = season_args
             stats = extract_player_stats_by_competition(html_comp, table_id, season=season_param)
@@ -100,7 +109,7 @@ def main():
             sys.exit(0)
 
         print("\n📊 Generation of the comparative graph...")
-        fig = compare_players_chart(player_stats_list, season=season_args, comp=comp_args)
+        fig = compare_players_chart(player_stats_list, season_args, comp_args, type=types_args)     
         fig.show()
         
     elif len(names) > 2:

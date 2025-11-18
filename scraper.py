@@ -46,7 +46,7 @@ def normalize_text(s):
     s = s.encode("ascii", "ignore").decode("utf-8")
     return s.lower().strip()
 
-def save_season_stats_to_csv(season_stats, player_name, season, comp=None):
+def save_season_stats_to_csv(season_stats, player_name, season, comp=None, type=None):
     """
     Saves statistics for one season or all seasons in a CSV file.
     - season_stats: dict (data returned by extract_player_season_stats_all_comps)
@@ -74,8 +74,9 @@ def save_season_stats_to_csv(season_stats, player_name, season, comp=None):
     safe_player = player_name.replace(" ", "_").replace("/", "-")
     safe_season_name = safe_season_name.replace("/", "-").replace(" ", "")
     safe_comp = comp.replace("/", "-").replace(" ", "") if comp else "all"
+    safe_type = type.replace("/", "-").replace(" ", "") if type else "standard"
 
-    csv_filename = os.path.join(output_dir, f"stats_{safe_player}_{safe_comp}_{safe_season_name}.csv")
+    csv_filename = os.path.join(output_dir, f"stats_{safe_player}_{safe_comp}_{safe_season_name}_{safe_type}.csv")
 
     # Prepare the data to be written
     fieldnames = ["Season", "Category", "Stat", "Value"]
@@ -523,139 +524,217 @@ def extract_core_stats(stats_dict, player_name):
     """
     core_stats = {"Player": player_name}
 
-    # Define the categories to keep
-    allowed_categories = {"Playing Time", "Performance", "Expected"}
+    if not stats_dict:
+        return core_stats
 
     for season, categories in stats_dict.items():
+        if not isinstance(categories, dict):
+            continue
+
         for category, substats in categories.items():
-            if category not in allowed_categories:
-                continue  
+            if not isinstance(substats, dict):
+                continue
+
+            # Clean the category name
+            clean_category = (
+                category.replace(" ", "_")
+                .replace("/", "_")
+                .replace("-", "_")
+                .lower()
+            )
 
             for key, value in substats.items():
-                
-                clean_category = category.replace(" ", "_").lower()
-                clean_key = key.replace(" ", "_").lower()
+                clean_key = (
+                    key.replace(" ", "_")
+                    .replace("/", "_")
+                    .replace("-", "_")
+                    .lower()
+                )
+
                 metric_name = f"{clean_category}_{clean_key}"
                 core_stats[metric_name] = value
+
     return core_stats
 
-def compare_players_chart(stats_list, season, comp):
+def get_table_id_for_type(stat_type, comp):
+    """
+    Returns the table ID associated with the selected statistics type.
+    """
+    stat_type = stat_type.lower()
+    comp = comp.lower()  # all, dl, dc, ic, nt
+
+    base_map = {
+        "standard": "stats_standard",
+        "shooting": "stats_shooting",
+        "passing": "stats_passing",
+        "pass_types": "stats_passing_types",
+        "da": "stats_defense",
+        "g&s": "stats_gca",
+    }
+
+    if stat_type not in base_map:
+        raise ValueError(f"Unknown stat type: {stat_type}")
+
+    base_id = base_map[stat_type]
+
+    # For "all competitions", table IDs always end with "_collapsed"
+    if comp == "all":
+        return f"{base_id}_collapsed"
+
+    # Otherwise: stats_xxx_dom_lg
+    comp_suffix = {
+        "dl": "dom_lg",
+        "dc": "dom_cup",
+        "ic": "intl_cup",
+        "nt": "nat_tm",
+    }[comp]
+
+    return f"{base_id}_{comp_suffix}"
+
+def compare_players_chart(stats_list, season, comp, type="standard"):
     """
     Compare two players with an interactive bar chart.
-    Hover shows player name, value, and statistic meaning.
+    Works with ANY stat type (standard, shooting, passing, pass types, defensive actions, goal&shot creation).
     """
     if not stats_list or len(stats_list) < 2:
         print("⚠️ At least two players are required to compare.")
         return
 
-    # Create DataFrame
+    # DataFrame creation 
     df = pd.DataFrame(stats_list)
     df.set_index("Player", inplace=True)
-    df = df.replace({r',': ''}, regex=True)
-    df = df.apply(pd.to_numeric, errors='coerce')
-    columns_to_drop = ["playing_time_min", "playing_time_90s"]
-    df = df.drop(columns=[col for col in columns_to_drop if col in df.columns])
-    df = df.dropna(axis=1, how="all")
+    print(df.columns.to_list())
     
-    # Common statistics
+    # List of stats to remove depending on selected type
+    excluded_stats = {
+        "standard": ["_age", "_squad", "_country", "_comp", "_lgrank",
+                    "playing_time_min", "playing_time_90s",
+                    "per_90_minutes_gls", "per_90_minutes_ast", "per_90_minutes_g+a",
+                    "per_90_minutes_g_pk", "per_90_minutes_g+a_pk",
+                    "per_90_minutes_xg", "per_90_minutes_xag",
+                    "per_90_minutes_xg+xag", "per_90_minutes_npxg",
+                    "per_90_minutes_npxg+xag"
+                    ],
+        "shooting": ["_age", "_squad", "_country", "_comp", "_lgrank", "_matches",
+                    "standard_90s", "standard_sh_90", "standard_sot_90",
+                    "standard_g_sh", "standard_g_sot", "standard_dist",
+                    "expected_npxg_sh", "expected_g_xg", "expected_np:g_xg"
+                    ],
+        "passing": ["_age", "_squad", "_country", "_comp", "_lgrank", "_ast", "_kp",
+                    "_1_3", "_ppa", "_crspa", "_prgp", "_matches", "total_90s", "total_totdist", "total_prgdist"
+                    ],
+        "pass_types": [ "_age", "_squad", "_country", "_comp", "_lgrank", "_90s", "_matches"],
+        "da": ["_age", "_squad", "_country", "_comp", "_lgrank", "_matches", "_err"],
+        "g&s": ["_age", "_squad", "_country", "_comp", "_lgrank", "_matches"],
+    }
+
+    # Identify stats to delete
+    current_exclusions = excluded_stats.get(type, [])
+
+    # Remove unwanted columns
+    df = df.drop(columns=[col for col in current_exclusions if col in df.columns], errors="ignore")
+    
+    # Replace commas (e.g. '1,234' -> '1234')
+    df = df.replace({r",": ""}, regex=True)
+    df = df.apply(pd.to_numeric, errors="coerce")
+
+    # Remove empty columns
+    df = df.dropna(axis=1, how="all")
+
+    # Keep only columns where both players have values 
     common_stats = [col for col in df.columns if not df[col].isna().any()]
     if not common_stats:
-        print("⚠️ No common statistics found between players.")
+        print("⚠️ No common statistics between players.")
         return
 
     df_to_plot = df[common_stats]
     player1, player2 = df_to_plot.index.tolist()
 
-    # Dictionary for full names of stats
-    stat_meaning = {
-        "playing_time_mp": "Matches Played",
-        "playing_time_starts": "Games started by player",
-        "performance_gls": "Goals",
-        "performance_ast": "Assists",
-        "performance_g+a": "Goals + Assists",
-        "performance_g-pk": "Non-penalty Goals",
-        "performance_pk": "Penalty Kicks Made",
-        "performance_pkatt": "Penalty Kicks Attempted",
-        "performance_crdy": "Yellow Cards",
-        "performance_crdr": "Red Cards",
-        "expected_xg": "Expected Goals",
-        "expected_npxg": "Non-penalty Expected Goals",
-        "expected_xag": "Expected Assisted Goals",
-        "expected_npxg+xag": "Non-penalty Expected Goals + Expected Assisted Goals",
-    }
+    # Labels 
+    display_labels = [col.replace("_", " ").title() for col in common_stats]
 
-    display_labels = [stat_meaning.get(stat, stat) for stat in common_stats]
-    
-    # Build interactive figure
+    # Plot building 
     fig = go.Figure()
-
-    hover_texts1 = [
-        f"{abs(val)}" for val, _ in zip(df_to_plot.loc[player1].values, common_stats)
-    ]
 
     fig.add_trace(go.Bar(
         y=display_labels,
-        x=-df_to_plot.loc[player1].values,  
+        x=-df_to_plot.loc[player1].values,   
         orientation='h',
         name=player1,
         marker_color="royalblue",
-        text=None,  
+
+        customdata=[abs(v) for v in df_to_plot.loc[player1].values],
         hovertemplate="<br>%{customdata}<br><extra></extra>",
-        customdata=hover_texts1, 
+
         hoverlabel=dict(
-            align="left",       
-            bgcolor="lightblue",  
-            bordercolor="blue",   
+            align="left",
+            bgcolor="lightblue",
+            bordercolor="blue",
             font=dict(color="black")
-        )   
+        )
     ))
 
+    # Player 2 (right side)
     fig.add_trace(go.Bar(
         y=display_labels,
         x=df_to_plot.loc[player2].values,
         orientation='h',
         name=player2,
         marker_color="crimson",
-        text=None,
-        hovertemplate="<br>%{x}<br><extra></extra>",
-        hoverlabel=dict(
-            align="left",       
-            bgcolor="#f17272",  
-            bordercolor="red",   
-            font=dict(color="black")
-        )   
+        hovertemplate="<b>%{y}</b><br>%{x}<extra></extra>"
     ))
 
-    # Title with season and competition
-    if season == "All" or "all": 
-        season == "all seasons"
+    # Title formatting 
+    # Format season
+    if str(season).lower() in ["all", "none", "", "null"]:
+        season_label = "All Seasons"
     else:
-        season = season
-    if comp == "all":
-        comp = "all competitions"
-    else: 
-        comp = comp
-        
-    # Layout with names in the middle
-    max_val = max(df_to_plot.max())  
+        season_label = season
+
+    # Format competition
+    comp_map_full = {
+        "all": "All Competitions",
+        "dl": "Domestic Leagues",
+        "dc": "Domestic Cups",
+        "ic": "International Cups",
+        "nt": "National Team",
+        None: "Unknown Competition"
+    }
+    comp_label = comp_map_full.get(str(comp).lower(), comp)
+
+    # Format stat type
+    type_map_full = {
+        "standard": "Standard Stats",
+        "shooting": "Shooting Stats",
+        "passing": "Passing Stats",
+        "pass_types": "Pass Types Statistics",
+        "da": "Defensive Actions",
+        "g&s": "Goal & Shot Creation"
+    }
+    type_label = type_map_full.get(type, type)
+
+    # Max scale
+    max_val = max(abs(df_to_plot).max())
+
+    # Layout 
     fig.update_layout(
         title=dict(
-            text=f"Player Comparison for {season}, {comp}",
-            x=0.5,           
-            xanchor='center', 
-            yanchor='top',    
-            font=dict(size=18, family="Arial")
-        ),        
-        barmode='overlay',
+            text=f"{type_label} Comparison – {season_label}, {comp_label}",
+            x=0.5,
+            xanchor="center",
+            font=dict(size=18)
+        ),
+        barmode="overlay",
         xaxis=dict(
-            title="Values",
+            title="Value",
             tickvals=[-max_val, -max_val/2, 0, max_val/2, max_val],
-            ticktext=[str(max_val), str(max_val/2), "0", str(max_val/2), str(max_val)],
+            ticktext=[max_val, max_val/2, 0, max_val/2, max_val],
             zeroline=True
         ),
-        yaxis=dict(title="", autorange='reversed'),
+        yaxis=dict(title="", autorange="reversed"),
         template="plotly_white",
-        bargap=0.5
+        bargap=0.45,
+        height=900
     )
 
     return fig
