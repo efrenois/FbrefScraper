@@ -603,7 +603,6 @@ def compare_players_chart(stats_list, season, comp, type="standard"):
     # DataFrame creation 
     df = pd.DataFrame(stats_list)
     df.set_index("Player", inplace=True)
-    print(df.columns.to_list())
     
     # List of stats to remove depending on selected type
     excluded_stats = {

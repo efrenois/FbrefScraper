@@ -86,6 +86,12 @@ with tab_single_player_analysis:
              "international cups", "national team"],
             index=0
         )
+        stats_type_single = st.selectbox(
+        "Type of Statistics",
+        ["Select a type of statistics...", "standard", "shooting", "passing", "pass_types", "da", "g&s"],
+        index=0,
+        help="Select which type of statistics to extract"
+        )
         st.write("")
         col_left, col_button = st.columns([13.5, 1])
         with col_button:
@@ -98,16 +104,30 @@ with tab_single_player_analysis:
         if season_single.strip() == "":
             st.warning("⚠️ Please enter a season.")
             st.stop()
-        if comp_single == "Sélectionnez une compétition...":
+        if comp_single == "Select a competition...":
             st.warning("⚠️ Please select a competition.")
             st.stop()
+        if stats_type_single.strip() == "Select a type of statistics...":
+            st.warning("⚠️ Please select a type of statistics.")
+            st.stop()
+
+        # Player search
 
         with st.spinner("📊 Data extraction..."):
             try:
                 results = fbref_search(name_single)
                 _, chosen = results["players"][0]
                 comp_key = comp_map[comp_single]
-                comp_url, table_id = get_competition_url_and_table_id(chosen, comp_key)
+                type_table_map = {
+                    "standard": "stats_standard_collapsed",
+                    "shooting": "stats_shooting",
+                    "passing": "stats_passing",
+                    "pass_types": "stats_pass_types",
+                    "da": "stats_defense",
+                    "g&s": "stats_gca"
+                }
+                table_id = get_table_id_for_type(stats_type_single, comp_key)
+                comp_url, _ = get_competition_url_and_table_id(chosen, comp_key)
                 code_comp, html_comp = fetch_page(comp_url)
                 stats = extract_player_stats_by_competition(
                     html_comp,
@@ -119,7 +139,7 @@ with tab_single_player_analysis:
                 st.stop()
 
             # Save CSV
-            csv_path = save_season_stats_to_csv(stats, player_name=name_single, season=season_single, comp=comp_single)
+            csv_path = save_season_stats_to_csv(stats, player_name=name_single, season=season_single, comp=comp_single, type=stats_type_single)
 
             st.subheader("📊 Data table")
             if not stats or "message" in stats:
@@ -174,6 +194,12 @@ with tab_compare:
              "international cups", "national team"],
             index=0
         )
+        stats_type_compare = st.selectbox(
+        "Type of Statistics",
+        [ "Select a type of statistics...","standard", "shooting", "passing", "pass_types", "da", "g&s"],
+        index=0,
+        help="Select which type of statistics to extract"
+        )
         st.write("")
         col_left, col_button = st.columns([13.5, 1])
         with col_button:
@@ -193,6 +219,9 @@ with tab_compare:
         if comp_compare == "Select a competition...":
             st.warning("⚠️ Please select a competition.")
             st.stop()
+        if stats_type_compare.strip() == "Select a type of statistics...":
+            st.warning("⚠️ Please select a type of statistics.")
+            st.stop()
 
         all_stats = []
         for name in player_list:
@@ -203,9 +232,13 @@ with tab_compare:
                     comp_key = comp_map[comp_compare]
                     comp_url, table_id = get_competition_url_and_table_id(chosen, comp_key)
                     code_comp, html_comp = fetch_page(comp_url)
+
+                    table_id = get_table_id_for_type(stats_type_compare, comp_key)
+
                     stats = extract_player_stats_by_competition(
                         html_comp, table_id, season=season_compare
                     )
+                    
                     core_stats = extract_core_stats(stats, name)
                     all_stats.append(core_stats)
                 except Exception as e:
