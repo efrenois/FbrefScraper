@@ -635,7 +635,7 @@ def compare_players_chart(stats_list, season, comp, type="standard"):
     "performance_gls": "Goals",
     "performance_ast": "Assists",
     "performance_g+a": "Goals + Assists",
-    "performance_g-pk": "Non-penalty Goals",
+    "performance_g_pk": "Non-penalty Goals",
     "performance_pk": "Penalty Kicks Made",
     "performance_pkatt": "Penalty Kicks Attempted",
     "performance_crdy": "Yellow Cards",
@@ -721,9 +721,7 @@ def compare_players_chart(stats_list, season, comp, type="standard"):
 
     # Remove unwanted columns
     df = df.drop(columns=[col for col in current_exclusions if col in df.columns], errors="ignore")
-    
-    print(df.columns.tolist())
-    
+        
     # Replace commas (e.g. '1,234' -> '1234')
     df = df.replace({r",": ""}, regex=True)
     df = df.apply(pd.to_numeric, errors="coerce")

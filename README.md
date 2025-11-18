@@ -52,11 +52,12 @@ Ouvrez le fichier HTML dans votre navigateur pour visualiser le passeport de Ney
 Voici un exemple du HTML généré: 
 <img width="1582" height="973" alt="ex_HTML_Neymar" src="https://github.com/user-attachments/assets/b2d84116-2830-467f-8866-847795a6543d" />
 
-2. Extraire les statistiques de tirs de Neymar Jr sur la saison 2014-2015 en Ligue des champions:
+2. Extraire les statistiques de tirs de Neymar Jr sur la saison 2017-2018 en Ligue des champions:
 ```bash
-python main.py 'Neymar' --season '2014-2015' --comp 'ic' --type 'shooting'
+python main.py 'Neymar' --season '2017-2018' --comp 'ic' --type 'shooting'
 ```
-Cette commande extrait les statistiques de Neymar Jr pour la saison 2014-2015 en Ligue des champions et les enregistre au format CSV dans le dossier `output/datas_player`.
+Cette commande extrait les statistiques de Neymar Jr pour la saison 2017-2018 en Ligue des champions et les enregistre au format CSV dans le dossier `output/datas_player`.
+
 
 3. Comparer les statistiques standards de Neymar Jr et Kylian Mbappé sur la saison 2022-2023 en Ligue 1:
 ```bash
