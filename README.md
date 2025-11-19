@@ -2,6 +2,8 @@
 
 Voici un scraper Python permettant de récupérer les informations et statistiques détaillées des joueurs depuis [FBref.com](https://fbref.com)￼.
 Le projet permet de générer le passeport d’un joueur (téléchargeable en pdf) au format HTML ou d’extraire ses statistiques par saison et compétition au format CSV.
+De plus , il est possible de comparer les performances de deux joueurs sur une saison et une compétition données.
+Cet outil peut être utilisé en ligne de commande ou via une interface graphique Streamlit pour faciliter son utilisation.
 
 ## Table des matières
 - [Fonctionnalités](#fonctionnalités)
