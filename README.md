@@ -69,19 +69,7 @@ python main.py 'Neymar' 'Kylian Mbappé' --season '2022-2023' --comp 'dl' --type
 Cette commande compare les performances de Neymar Jr et Kylian Mbappé pour la saison 2022-2023 en Ligue 1 et affiche un graphique comparatif.
 <img width="1582" height="973" alt="Capture d’écran 2025-11-18 à 16 17 57" src="https://github.com/user-attachments/assets/5b9548a0-16c7-4e86-a1f8-3b9711563f16" />
 
-### Interface graphique Streamlit
-Lancez l'interface Streamlit avec la commande suivante :
-```bash
-streamlit run gui_streamlit.py
-```
-Cela ouvrira une interface web où vous pourrez jouer avec les fonctionnalités du scraper de manière interactive.
-<img width="1582" height="973" alt="Capture d’écran 2025-11-14 à 16 06 28" src="https://github.com/user-attachments/assets/2ec6bbd1-17ac-49ef-a2f2-884093412aee" />
-
-La seule différence avec la ligne de commande est que lorsque vous comparez deux joueurs, les statistiques comparées peuvent être visualisées sous forme de bar chart ou de radar chart alors qu'en ligne de commande, seul le bar chart est disponible.
-
-https://github.com/user-attachments/assets/82091d62-dc13-4745-8c70-5abc3d6defcb
-
-## Options de la ligne de commande
+### Options de la ligne de commande
 
 - `player_name` : Nom du joueur dont vous souhaitez récupérer les informations (obligatoire).
 - `--season` : Saison du joueur à analyser (exemple : `2014-2015`). Utilisez `all` ou `All` pour toutes les saisons.
@@ -98,6 +86,18 @@ https://github.com/user-attachments/assets/82091d62-dc13-4745-8c70-5abc3d6defcb
     - `pass_types` : Types de passes.
     - `da` : Actions défensives.
     - `g&s` : Création de buts et tirs. 
+
+### Interface graphique Streamlit
+Lancez l'interface Streamlit avec la commande suivante :
+```bash
+streamlit run gui_streamlit.py
+```
+Cela ouvrira une interface web où vous pourrez jouer avec les fonctionnalités du scraper de manière interactive.
+<img width="1582" height="973" alt="Capture d’écran 2025-11-14 à 16 06 28" src="https://github.com/user-attachments/assets/2ec6bbd1-17ac-49ef-a2f2-884093412aee" />
+
+La seule différence avec la ligne de commande est que lorsque vous comparez deux joueurs, les statistiques comparées peuvent être visualisées sous forme de bar chart ou de radar chart alors qu'en ligne de commande, seul le bar chart est disponible.
+
+https://github.com/user-attachments/assets/82091d62-dc13-4745-8c70-5abc3d6defcb
 
 ## Structure du projet
 ```bash
