@@ -275,7 +275,6 @@ with tab_compare:
         comp_val = st.session_state["compare_comp"]
         type_val = st.session_state["compare_type"]
 
-        # Génération du graphique choisi
         if chart_type == "Bar Chart":
             fig = compare_players_chart(stats_list, season_val, comp_val, type_val)
         else:
