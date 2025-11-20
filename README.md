@@ -79,6 +79,12 @@ Cela ouvrira une interface web où vous pourrez jouer avec les fonctionnalités 
 
 La seule différence avec la ligne de commande est que lorsque vous comparez deux joueurs, les statistiques comparées peuvent être visualisées sous forme de bar chart ou de radar chart alors qu'en ligne de commande, seul le bar chart est disponible.
 
+
+
+Uploading Enregistrement de l’écran 2025-11-20 à 15.27.55.mov…
+
+
+
 ## Options de la ligne de commande
 
 - `player_name` : Nom du joueur dont vous souhaitez récupérer les informations (obligatoire).
