@@ -67,7 +67,8 @@ Cette commande extrait les statistiques de Neymar Jr pour la saison 2017-2018 en
 python main.py 'Neymar' 'Kylian Mbappé' --season '2022-2023' --comp 'dl' --type 'standard'
 ```
 Cette commande compare les performances de Neymar Jr et Kylian Mbappé pour la saison 2022-2023 en Ligue 1 et affiche un graphique comparatif.
-<img width="1582" height="973" alt="Capture d’écran 2025-11-18 à 16 17 57" src="https://github.com/user-attachments/assets/5b9548a0-16c7-4e86-a1f8-3b9711563f16" />
+<img width="1582" height="973" alt="Capture d’écran 2025-11-20 à 15 56 02" src="https://github.com/user-attachments/assets/8e1467d1-cd2a-44f5-a2a7-2140f2fc9881" />
+
 
 ### Options de la ligne de commande
 
