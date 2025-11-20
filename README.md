@@ -18,7 +18,7 @@ Enfin, cet outil peut être utilisé en ligne de commande ou via une interface g
 - Récupération automatique des informations d’un joueur : nom, photo, position, pied fort, date de naissance, club, équipe nationale, salaire.
 - Génération d’un passeport joueur avec toute ses informations au format HTML et passeport téléchargeable au format PDF.
 - Extraction des statistiques détaillées du joueur par saison et compétition au format CSV.
-- Comparaison des performances entre deux joueurs.
+- Comparaison des performances entre deux joueurs et visualisation via bar chart et radar chart.
 
 ## Prérequis
 ```bash
@@ -76,6 +76,8 @@ streamlit run gui_streamlit.py
 ```
 Cela ouvrira une interface web où vous pourrez jouer avec les fonctionnalités du scraper de manière interactive.
 <img width="1582" height="973" alt="Capture d’écran 2025-11-14 à 16 06 28" src="https://github.com/user-attachments/assets/2ec6bbd1-17ac-49ef-a2f2-884093412aee" />
+
+La seule différence avec la ligne de commande est que lorsque vous comparez deux joueurs, les statistiques comparées peuvent être visualisées sous forme de bar chart ou de radar chart alors qu'en ligne de commande, seul le bar chart est disponible.
 
 ## Options de la ligne de commande
 

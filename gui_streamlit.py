@@ -189,6 +189,7 @@ with tab_single_player_analysis:
             
 with tab_compare:
     st.header("Player Comparison")
+
     with st.form("compare_form"):
         players_names = st.text_input("Player names", 
                                      placeholder="Ex: Lamine Yamal, Nico Williams", help="Enter two player names separated by commas.")
@@ -230,6 +231,7 @@ with tab_compare:
             st.stop()
 
         all_stats = []
+        
         for name in player_list:
             with st.spinner(f"⚙️ Data Extraction..."):
                 try:
@@ -251,16 +253,38 @@ with tab_compare:
                 except Exception as e:
                     st.error(f"Error processing {name}: {e}")
                     st.stop()
+                    
+        st.session_state["compare_stats"] = all_stats
+        st.session_state["compare_season"] = season_compare
+        st.session_state["compare_comp"] = comp_key
+        st.session_state["compare_type"] = type_key
+                
             
-        # Affichage graphique
-        if len(all_stats) >= 2:
-            st.subheader("📊 Player Comparison")
-            fig = compare_players_chart(all_stats, season_compare, comp_compare, type_key)
-            if fig is None:
-                st.warning("⚠️ No common statistics to compare between the players.")
-                st.stop()
-            else:
-                st.plotly_chart(fig)
+    if "compare_stats" in st.session_state:
+
+        st.subheader("📊 Player Comparison")
+
+        chart_type = st.radio(
+            "Chart Representation:",
+            ["Bar Chart", "Radar Chart"],
+            horizontal=True
+        )
+
+        stats_list = st.session_state["compare_stats"]
+        season_val = st.session_state["compare_season"]
+        comp_val = st.session_state["compare_comp"]
+        type_val = st.session_state["compare_type"]
+
+        # Génération du graphique choisi
+        if chart_type == "Bar Chart":
+            fig = compare_players_chart(stats_list, season_val, comp_val, type_val)
+        else:
+            fig = compare_players_radar_chart(stats_list, season_val, comp_val, type_val)
+
+        if fig is None:
+            st.warning("⚠️ No common statistics to compare between the players.")
+        else:
+            st.plotly_chart(fig)
 
 # Footer
 st.markdown(
