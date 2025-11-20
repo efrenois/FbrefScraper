@@ -79,6 +79,7 @@ Cela ouvrira une interface web où vous pourrez jouer avec les fonctionnalités 
 
 La seule différence avec la ligne de commande est que lorsque vous comparez deux joueurs, les statistiques comparées peuvent être visualisées sous forme de bar chart ou de radar chart alors qu'en ligne de commande, seul le bar chart est disponible.
 
+https://github.com/user-attachments/assets/82091d62-dc13-4745-8c70-5abc3d6defcb
 
 ## Options de la ligne de commande
 
