@@ -265,7 +265,7 @@ with tab_compare:
         st.subheader("📊 Player Comparison")
 
         chart_type = st.radio(
-            "Chart Representation:",
+            "",
             ["Bar Chart", "Radar Chart"],
             horizontal=True
         )
