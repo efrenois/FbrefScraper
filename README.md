@@ -16,7 +16,7 @@ Enfin, cet outil peut être utilisé en ligne de commande ou via une interface g
 
 ## Fonctionnalités
 - Récupération automatique des informations d’un joueur : nom, photo, position, pied fort, date de naissance, club, équipe nationale, salaire.
-- Génération d’un passeport joueur avec toute ses informations au format HTML et passeport téléchargeable au format PDF.
+- Génération d’un passeport joueur avec toutes ses informations au format HTML et passeport téléchargeable au format PDF.
 - Extraction des statistiques détaillées du joueur par saison et compétition au format CSV.
 - Comparaison des performances entre deux joueurs et visualisation via bar chart et radar chart.
 
