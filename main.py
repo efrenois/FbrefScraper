@@ -9,7 +9,7 @@ def main():
     parser.add_argument("--comp", type=str, default=None, choices=["all", "dl", "dc", "ic", "nt"], 
                         help="Competitions : all (all competitions), dl (domestic leagues), dc (domestic cups), ic (international cups), nt (national team)")
     parser.add_argument("--season", type=str, default=None, help="Player season to be analyzed (e.g., '2014-2015'). Use 'all' for all seasons.")
-    parser.add_argument("--type", type=str, default=None, choices=["standard", "shooting", "passing", "pass_types", "da", "g&s"], help="Type of statistics to extract"
+    parser.add_argument("--type", type=str, default=None, choices=["standard", "shooting", "passing", "pass_types", "da", "g&s", "goalkeeping"], help="Type of statistics to extract"
 )
     args = parser.parse_args()
     
@@ -57,7 +57,7 @@ def main():
             player_url = chosen
             try:
                 # Generate the URL and ID of the HTML table according to the selected competition.
-                comp_url, _ = get_competition_url_and_table_id(player_url, comp=comp_args)
+                comp_url, _ = get_competition_url(player_url, comp=comp_args)
                 print(f"✅ URL found : {comp_url}")
                 
                 # Determine which table ID to extract (standard, shooting, passing, etc.)
@@ -101,7 +101,7 @@ def main():
                 sys.exit(2)
             
             _, chosen = results["players"][0]
-            comp_url, _ = get_competition_url_and_table_id(chosen, comp=comp_args)
+            comp_url, _ = get_competition_url(chosen, comp=comp_args)
             table_id = get_table_id_for_type(types_args, comp_args)
             _, html_comp = fetch_page(comp_url)
             season_param = season_args

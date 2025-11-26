@@ -87,6 +87,7 @@ Cette commande compare les performances de Neymar Jr et Kylian Mbappé pour la s
     - `pass_types` : Types de passes.
     - `da` : Actions défensives.
     - `g&s` : Création de buts et tirs. 
+    - `goalkeeping` : Statistiques de gardien de but.
 
 ### Interface graphique Streamlit
 Lancez l'interface Streamlit avec la commande suivante :

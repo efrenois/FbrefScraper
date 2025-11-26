@@ -19,7 +19,8 @@ type_map = {
     "passing statistics": "passing",
     "pass types statistics": "pass_types",
     "defense actions statistics": "da",
-    "goal & shot creation statistics": "g&s"
+    "goal & shot creation statistics": "g&s",
+    "Goalkeeping statistics": "stats_keeper"
 }
 
 st.set_page_config(page_title="FBref Scraper", page_icon="⚽", layout="wide")
@@ -99,7 +100,7 @@ with tab_single_player_analysis:
         stats_type_single = st.selectbox(
         "Type of Statistics",
         ["Select a type of statistics...", "standard statistics", "shooting statistics", "passing statistics",
-         "pass types statistics", "defense actions statistics", "goal & shot creation statistics"],
+         "pass types statistics", "defense actions statistics", "goal & shot creation statistics", "goalkeeping statistics"],
         index=0,
         help="Select which type of statistics to extract"
         )
@@ -132,7 +133,7 @@ with tab_single_player_analysis:
                 type_key = type_map[stats_type_single]
 
                 table_id = get_table_id_for_type(type_key, comp_key)
-                comp_url, _ = get_competition_url_and_table_id(chosen, comp_key)
+                comp_url, _ = get_competition_url(chosen, comp_key)
                 code_comp, html_comp = fetch_page(comp_url)
                 stats = extract_player_stats_by_competition(
                     html_comp,
@@ -239,7 +240,7 @@ with tab_compare:
                     _, chosen = results["players"][0]
                     comp_key = comp_map[comp_compare]
                     type_key = type_map[stats_type_compare]
-                    comp_url, _ = get_competition_url_and_table_id(chosen, comp_key)
+                    comp_url, _ = get_competition_url(chosen, comp_key)
                     code_comp, html_comp = fetch_page(comp_url)
 
                     table_id = get_table_id_for_type(type_key, comp_key)

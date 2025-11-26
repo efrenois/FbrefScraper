@@ -59,6 +59,7 @@ excluded_stats = {
         "pass_types": [ "_age", "_squad", "_country", "_comp", "_lgrank", "_90s", "_matches"],
         "da": ["_age", "_squad", "_country", "_comp", "_lgrank", "_matches", "_err"],
         "g&s": ["_age", "_squad", "_country", "_comp", "_lgrank", "_matches"],
+        "goalkeeping": ["_age", "_squad", "_country", "_comp", "_lgrank", "_matches", "playing_time_min", "playing_time_90s"]
     }
 
 # Stats meaning 
@@ -147,6 +148,21 @@ stat_meaning = {
     "gca_types_sh": "GCA (Shots)",
     "gca_types_fld": "GCA (Fouled)",
     "gca_types_def": "GCA (Defensive Actions)",
+    "performance_ga": "Goals Against",
+    "performance_ga90": "Goals Against per 90",
+    "performance_sota": "Shots on Target Against",
+    "performance_saves": "Saves",
+    "performance_save%": "Save %",
+    "performance_w": "Wins",
+    "performance_d": "Draws",
+    "performance_l": "Losses",
+    "performance_cs": "Clean Sheets",
+    "performance_cs%": "Clean Sheet %",
+    "penalty_kicks_pkatt": "Penalty Kicks Attempted",
+    "penalty_kicks_pka": "Penalty Kicks Allowed",
+    "penalty_kicks_pksv": "Penalty Kicks Stopped",
+    "penalty_kicks_pkm": "Penalty Kicks Missed",
+    "penalty_kicks_save%": "Penalty Kicks Save %"
     }
 
 # Format competition
@@ -166,7 +182,8 @@ type_map_full = {
     "passing": "Passing Stats",
     "pass_types": "Pass Types Statistics",
     "da": "Defensive Actions",
-    "g&s": "Goal & Shot Creation"
+    "g&s": "Goal & Shot Creation",
+    "goalkeeping": "Goalkeeping Statistics"
 }
 
 ###############################################################################################################################################
@@ -505,7 +522,7 @@ def generate_player_passeport(player_info):
     return html_content, output_html
 
 
-def get_competition_url_and_table_id(player_url, comp="all"):
+def get_competition_url(player_url, comp="all"):
     """
     Builds the complete URL and also returns the ID of the corresponding table,
     depending on the competition selected:
@@ -705,6 +722,7 @@ def get_table_id_for_type(stat_type, comp):
         "pass_types": "stats_passing_types",
         "da": "stats_defense",
         "g&s": "stats_gca",
+        "goalkeeping": "stats_keeper",
     }
 
     if stat_type not in base_map:
