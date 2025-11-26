@@ -212,7 +212,7 @@ def save_season_stats_to_csv(season_stats, player_name, season, comp=None, type=
     - comp: competition (e.g., “dl,” “dc,” “ic,” “nt,” “all”), optional
     """
     if not season_stats or "message" in season_stats:
-        print(f"⚠️ No data to record for {season}.")
+        print(f"⚠️ No data to record for {season} and csv not saved.")
         return None
 
     # Determine whether you want all seasons
@@ -301,7 +301,6 @@ def fbref_search(name):
     """
     q = quote_plus(name)
     url = f"{BASE}/search/search.fcgi?search={q}"
-    print(f"[search] requête : {url}")
     status, html = fetch_page(url, max_retries=3, timeout=15, use_cloudscraper_on_block=True)
 
     if status != 200 or not html:
@@ -357,8 +356,7 @@ def fbref_search(name):
         return {"players": [best_match]}
     else:
         raise ValueError(f"❌ No players found matching '{name}'.")
-    
-                     
+
 def extract_player_info(html, base_url, name):
     """
     Extracts basic player information from their FBref page.
@@ -579,7 +577,7 @@ def extract_player_stats_by_competition(html, table_id, season):
     # Look for the table first
     table = soup.find("table", id=table_id)
     if not table:
-        return {"message": "⚠️ Table not found in div #stats_standard_collapsed"}
+        raise ValueError(f"⚠️ Table with id '{table_id}' not found on the page.")
 
     # Extract headers 
     thead = table.find("thead")
@@ -634,7 +632,7 @@ def extract_player_stats_by_competition(html, table_id, season):
         # Extract data rows
         tbody = table.find("tbody")
         if not tbody:
-            return {"message": "⚠️ no data found in the table"}
+            raise ValueError (f"⚠️ No table body found in the table with id '{table_id}'.")
         rows = tbody.find_all("tr")
         
     for row in rows:
@@ -671,7 +669,7 @@ def extract_player_stats_by_competition(html, table_id, season):
     elif season in season_data:
         return {season: season_data[season]}
     else:
-        return {"message": f"⚠️ Data unknown for the season {season}"}
+        raise ValueError (f"⚠️ Season '{season}' not found in the data.")
     
 def extract_core_stats(stats_dict, player_name):
     """

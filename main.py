@@ -45,7 +45,6 @@ def main():
 
         if results.get("players"):
             _, chosen = results["players"][0]
-            print(f"✅ URL found : {chosen}")
             # Passport
             if not season_args and not comp_args:
                 try:
@@ -63,7 +62,6 @@ def main():
             try:
                 # Generate the URL and ID of the HTML table according to the selected competition.
                 comp_url, _ = get_competition_url(player_url, comp=comp_args)
-                print(f"✅ URL found : {comp_url}")
                 
                 # Determine which table ID to extract (standard, shooting, passing, etc.)
                 table_id = get_table_id_for_type(types_args, comp_args)
@@ -81,22 +79,23 @@ def main():
 
             # Extract statistics by season
             season_param = season_args
-            stats = extract_player_stats_by_competition(html_comp, table_id, season=season_param)
-
-            # Save only if --save is used
-            if args.save:
-                save_season_stats_to_csv(
-                    stats,
-                    player_name=name,
-                    season=season_args,
-                    comp=comp_args,
-                    type=types_args
-                )
-                print("💾 CSV saved (because --save was specified).")
-            else:
-                print("⚠️ CSV not saved (default behaviour).")
-
-            sys.exit(0)
+            try:
+                stats = extract_player_stats_by_competition(html_comp, table_id, season=season_param)
+                # Save only if --save is used
+                if args.save:
+                    r = save_season_stats_to_csv(
+                        stats,
+                        player_name=name,
+                        season=season_args,
+                        comp=comp_args,
+                        type=types_args
+                    )
+                else:
+                    print("⚠️ Add --save to the command if you want to save the data in a CSV file.")
+                sys.exit(0)
+            except ValueError as ve:
+                print("❌ Data extraction declined  :", ve)
+                sys.exit(5)
             
     elif len(names) == 2:
         player_stats_list = []
