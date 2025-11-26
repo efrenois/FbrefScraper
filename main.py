@@ -11,6 +11,11 @@ def main():
     parser.add_argument("--season", type=str, default=None, help="Player season to be analyzed (e.g., '2014-2015'). Use 'all' for all seasons.")
     parser.add_argument("--type", type=str, default=None, choices=["standard", "shooting", "passing", "pass_types", "da", "g&s", "goalkeeping"], help="Type of statistics to extract"
 )
+    parser.add_argument(
+        "--save",
+        action="store_true",
+        help="Save the extracted CSV (disabled by default)"
+    )
     args = parser.parse_args()
     
 
@@ -78,9 +83,20 @@ def main():
             season_param = season_args
             stats = extract_player_stats_by_competition(html_comp, table_id, season=season_param)
 
-            # Save as CSV
-            save_season_stats_to_csv(stats, player_name=name, season=season_args, comp=comp_args, type=types_args)
-            sys.exit(0) 
+            # Save only if --save is used
+            if args.save:
+                save_season_stats_to_csv(
+                    stats,
+                    player_name=name,
+                    season=season_args,
+                    comp=comp_args,
+                    type=types_args
+                )
+                print("💾 CSV saved (because --save was specified).")
+            else:
+                print("⚠️ CSV not saved (default behaviour).")
+
+            sys.exit(0)
             
     elif len(names) == 2:
         player_stats_list = []
