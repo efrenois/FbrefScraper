@@ -56,7 +56,7 @@ Voici un exemple du HTML généré:
 
 2. Extraire les statistiques de tirs de Neymar Jr sur la saison 2017-2018 en Ligue des champions:
 ```bash
-python main.py 'Neymar' --season '2017-2018' --comp 'ic' --type 'shooting'
+python main.py 'Neymar' --season '2017-2018' --comp 'ic' --type 'shooting' --save
 ```
 Cette commande extrait les statistiques de Neymar Jr pour la saison 2017-2018 en Ligue des champions et les enregistre au format CSV dans le dossier `output/datas_player`.
 
